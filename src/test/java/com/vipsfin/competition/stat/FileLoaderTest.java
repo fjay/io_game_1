@@ -4,6 +4,7 @@ import com.xiaoleilu.hutool.io.FileUtil;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -45,12 +46,27 @@ public class FileLoaderTest {
     }
 
     @Test
-    public void result() {
+    public void result() throws IOException {
         Task task = new Task();
         task.loadBrand("brand_name_ok.txt");
         task.loadData("bisai_1.txt");
         task.count();
 
         System.out.println(task.result());
+    }
+
+    @Test
+    public void loadBrand() throws IOException {
+        Task task = new Task();
+        task.loadBrand("/Users/fjay/Documents/work/vip/code/game/io/test/brand_name.txt");
+    }
+
+    @Test
+    public void trie() {
+        SimpleTrie trie = new SimpleTrie();
+        SimpleTrie.TrieNode a = trie.insertAndGetLastNode("a");
+        SimpleTrie.TrieNode b = trie.insertAndGetLastNode("abc");
+        System.out.println(a.getValue());
+        System.out.println(b.getValue());
     }
 }

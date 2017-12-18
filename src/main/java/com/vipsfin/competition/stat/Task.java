@@ -3,7 +3,11 @@ package com.vipsfin.competition.stat;
 import com.xiaoleilu.hutool.io.FileUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
+import org.iq80.leveldb.DB;
+import org.iq80.leveldb.Options;
+import org.iq80.leveldb.impl.Iq80DBFactory;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,14 +37,23 @@ public class Task {
             }
     );
 
-    public void loadBrand(String path) {
+    public void loadBrand(String path) throws IOException {
         AtomicLong orderCounter = new AtomicLong();
+        SimpleTrie trie = new SimpleTrie();
+
+        Options options = new Options();
+        options.createIfMissing(true);
+        DB db = new Iq80DBFactory().open(FileUtil.file("/Users/fjay/Documents/work/vip/code/game/game1_of_io/db"), options);
 
         FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
-            Trie<Result>.Node node = brandTrie.insertAndGetLastNode(line, 1);
-            if (node.getValue() == null) {
-                node.setValue(new Result().setName(line).setOrder(orderCounter.getAndIncrement()));
-            }
+            String x = line;
+
+            db.put(line.getBytes(), new Result().setOrder(orderCounter.getAndIncrement()).s().getBytes());
+
+//            Trie<Result>.Node node = brandTrie.insertAndGetLastNode(line, 1);
+//            if (node.getValue() == null) {
+//                node.setValue();
+//            }
         });
     }
 
@@ -139,6 +152,17 @@ public class Task {
         @Override
         public String toString() {
             return name;
+        }
+
+        public static Result d(String value) {
+            String[] temp = value.split("_");
+            return new Result().setAmount(new BigDecimal(temp[0]))
+                    .setCount(Long.valueOf(temp[1]))
+                    .setOrder(Long.valueOf(temp[2]));
+        }
+
+        public String s() {
+            return amount + "_" + count + "_" + order;
         }
     }
 }
