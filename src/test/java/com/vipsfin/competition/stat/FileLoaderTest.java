@@ -59,22 +59,22 @@ public class FileLoaderTest {
     @Test
     public void loadBrand() throws IOException {
         Task task = new Task();
-        task.loadBrand("/Users/fjay/Documents/work/vip/code/game/io/test/brand_name.txt");
+        long a = System.currentTimeMillis();
+        task.loadBrand("F:\\name\\brand_name.txt");
+        long b = System.currentTimeMillis();
+        System.out.println(b - a);
     }
 
     @Test
     public void trie() {
-        SimpleTrie trie = new SimpleTrie();
-        SimpleTrie.TrieNode a = trie.insertAndGetLastNode("a");
-        SimpleTrie.TrieNode b = trie.insertAndGetLastNode("abc");
-        System.out.println(a.getValue());
-        System.out.println(b.getValue());
+        DoubleArrayTrie trie = new DoubleArrayTrie();
+//       trie.build("");
     }
 
     @Test
     public void read() throws IOException {
-        RandomAccessFile randomAccessFile = new RandomAccessFile(FileUtil.file("brand_name_ok.txt"), "r");
-        randomAccessFile.seek(100);
+        RandomAccessFile randomAccessFile = new RandomAccessFile(FileUtil.file("F:\\name\\brand_name.txt"), "r");
+        randomAccessFile.seek(100000000l);
 
         int hasRead = 0;
         byte[] buff = new byte[100];

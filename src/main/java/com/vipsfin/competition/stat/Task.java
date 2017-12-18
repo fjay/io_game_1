@@ -7,8 +7,12 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,16 +49,39 @@ public class Task {
         options.createIfMissing(true);
         DB db = new Iq80DBFactory().open(FileUtil.file("/Users/fjay/Documents/work/vip/code/game/game1_of_io/db"), options);
 
+        List<String> list = new ArrayList<>();
+        BufferedWriter writer = FileUtil.getWriter("F:\\name\\brand_name.txt", Charset.defaultCharset(), true);
         FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
-            String x = line;
-
-            db.put(line.getBytes(), new Result().setOrder(orderCounter.getAndIncrement()).s().getBytes());
+            orderCounter.incrementAndGet();
+//            db.put(line.getBytes(), new Result().setOrder(orderCounter.getAndIncrement()).s().getBytes());
 
 //            Trie<Result>.Node node = brandTrie.insertAndGetLastNode(line, 1);
 //            if (node.getValue() == null) {
 //                node.setValue();
 //            }
         });
+
+        RandomAccessFile randomAccessFile = new RandomAccessFile(FileUtil.file("F:\\name\\brand_name.txt"), "rw");
+
+        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
+            StringBuilder y = new StringBuilder();
+            for (int i = 0; i < line.length(); i++) {
+                char ch = line.charAt(i);
+                int x = ch - ' ';
+                y.append(x);
+            }
+
+            long pos = Long.valueOf(y.toString()) % orderCounter.longValue();
+            try {
+                randomAccessFile.seek(pos);
+                randomAccessFile.writeLong(1l);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+
+        System.out.println(orderCounter.longValue());
     }
 
 
