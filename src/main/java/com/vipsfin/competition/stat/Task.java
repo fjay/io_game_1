@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -65,59 +66,9 @@ public class Task {
         return Result.d(value);
     }
 
-    public void loadData2(String path) {
-        // 东方亮 工艺细致 VIP_SH 487855247 2015-4-4
-        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
-            Trie<Result>.Node brandNode = brandTrie.findNode(line);
-
-            if (brandNode == null || !brandNode.isWordEnding()) {
-                return;
-            }
-
-            String[] temp = line.split(" ");
-            int pos = temp.length;
-            String date = temp[--pos];
-            String amount = temp[--pos];
-            String location = temp[--pos];
-
-            brandNode.getValue().addAmount(new BigDecimal(amount));
-
-            Trie.Node dataNode = dataTrie.insertAndGetLastNode(date + "_" + brandNode.getValue().getOrder(), 1);
-            if (dataNode.getCount() == 1) {
-                brandNode.getValue().addCount();
-            }
-
-            queue.remove(brandNode.getValue());
-            queue.offer(brandNode.getValue());
-        });
-    }
-
-    public void loadData(String path) {
-        // 东方亮 工艺细致 VIP_SH 487855247 2015-4-4
-        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
-            Trie<Result>.Node brandNode = brandTrie.findNode(line);
-
-            if (brandNode == null || !brandNode.isWordEnding()) {
-                return;
-            }
-
-            String[] temp = line.split(" ");
-            int pos = temp.length;
-            String date = temp[--pos];
-            String amount = temp[--pos];
-            String location = temp[--pos];
-
-            brandNode.getValue().addAmount(new BigDecimal(amount));
-
-            Trie.Node dataNode = dataTrie.insertAndGetLastNode(date + "_" + brandNode.getValue().getOrder(), 1);
-            if (dataNode.getCount() == 1) {
-                brandNode.getValue().addCount();
-            }
-
-            queue.remove(brandNode.getValue());
-            queue.offer(brandNode.getValue());
-        });
-    }
+    private static char[] array = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            .toCharArray();
+    private static String numStr = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     public void count() {
 
@@ -129,6 +80,80 @@ public class Task {
 
     public void sort(Result result) {
         queue.offer(result);
+    }
+
+    //10进制转为其他进制，除留取余，逆序排列
+    public static String tenToN(long number, int N) {
+        Long rest = number;
+        Stack<Character> stack = new Stack<Character>();
+        StringBuilder result = new StringBuilder(0);
+        while (rest != 0) {
+            stack.add(array[new Long((rest % N)).intValue()]);
+            rest = rest / N;
+        }
+        for (; !stack.isEmpty(); ) {
+            result.append(stack.pop());
+        }
+        return result.length() == 0 ? "0" : result.toString();
+
+    }
+
+    public void loadData(String path) {
+        // 东方亮 工艺细致 VIP_SH 487855247 2015-4-4
+        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
+
+            String[] temp = line.split(" ");
+            int pos = temp.length;
+            String date = temp[--pos];
+            String amount = temp[--pos];
+            String location = temp[--pos];
+
+            StringBuilder brand = new StringBuilder();
+            for (int i = 0; i < pos; i++) {
+                brand.append(temp[i]);
+                if (i < pos - 1) {
+                    brand.append(" ");
+                }
+            }
+
+            Result result = get(brand.toString());
+            result.addAmount(new BigDecimal(amount));
+
+            Trie.Node dataNode = dataTrie.insertAndGetLastNode(date + "_" + tenToN(result.getOrder(), 62), 1);
+            if (dataNode.getCount() == 1) {
+                result.addCount();
+            }
+
+            queue.remove(result);
+            queue.offer(result);
+        });
+    }
+
+    public void loadData3(String path) {
+        // 东方亮 工艺细致 VIP_SH 487855247 2015-4-4
+        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
+            Trie<Result>.Node brandNode = brandTrie.findNode(line);
+
+            if (brandNode == null || !brandNode.isWordEnding()) {
+                return;
+            }
+
+            String[] temp = line.split(" ");
+            int pos = temp.length;
+            String date = temp[--pos];
+            String amount = temp[--pos];
+            String location = temp[--pos];
+
+            brandNode.getValue().addAmount(new BigDecimal(amount));
+
+            Trie.Node dataNode = dataTrie.insertAndGetLastNode(date + "_" + brandNode.getValue().getOrder(), 1);
+            if (dataNode.getCount() == 1) {
+                brandNode.getValue().addCount();
+            }
+
+            queue.remove(brandNode.getValue());
+            queue.offer(brandNode.getValue());
+        });
     }
 
     public static class Result {
