@@ -63,6 +63,7 @@ public class FileLoaderTest {
         task.loadBrand("F:\\name\\brand_name.txt");
         long b = System.currentTimeMillis();
         System.out.println(b - a);
+        System.out.println(task.get("fNWn cuVkPQMaEDOgQ").s());
     }
 
     @Test

@@ -7,12 +7,9 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
 
-import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -23,6 +20,8 @@ public class Task {
 
     protected Trie<Result> brandTrie = new Trie<>();
     protected Trie dataTrie = new Trie();
+    protected DB db;
+
     protected BoundedPriorityQueue<Result> queue = new BoundedPriorityQueue<>(
             40,
             (o1, o2) -> {
@@ -43,47 +42,55 @@ public class Task {
 
     public void loadBrand(String path) throws IOException {
         AtomicLong orderCounter = new AtomicLong();
-        SimpleTrie trie = new SimpleTrie();
 
+        File file = FileUtil.file(path);
         Options options = new Options();
         options.createIfMissing(true);
-        DB db = new Iq80DBFactory().open(FileUtil.file("/Users/fjay/Documents/work/vip/code/game/game1_of_io/db"), options);
-
-        List<String> list = new ArrayList<>();
-        BufferedWriter writer = FileUtil.getWriter("F:\\name\\brand_name.txt", Charset.defaultCharset(), true);
-        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
-            orderCounter.incrementAndGet();
+        db = new Iq80DBFactory().open(FileUtil.mkdir(file.getParentFile().getAbsolutePath() + "/db"), options);
+//
+//        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
 //            db.put(line.getBytes(), new Result().setOrder(orderCounter.getAndIncrement()).s().getBytes());
-
-//            Trie<Result>.Node node = brandTrie.insertAndGetLastNode(line, 1);
-//            if (node.getValue() == null) {
-//                node.setValue();
-//            }
-        });
-
-        RandomAccessFile randomAccessFile = new RandomAccessFile(FileUtil.file("F:\\name\\brand_name.txt"), "rw");
-
-        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
-            StringBuilder y = new StringBuilder();
-            for (int i = 0; i < line.length(); i++) {
-                char ch = line.charAt(i);
-                int x = ch - ' ';
-                y.append(x);
-            }
-
-            long pos = Long.valueOf(y.toString()) % orderCounter.longValue();
-            try {
-                randomAccessFile.seek(pos);
-                randomAccessFile.writeLong(1l);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
-
-        System.out.println(orderCounter.longValue());
+//
+////            Trie<Result>.Node node = brandTrie.insertAndGetLastNode(line, 1);
+////            if (node.getValue() == null) {
+////                node.setValue();
+////            }
+//        });
+//
+//        db.close();
     }
 
+    public Result get(String brand) {
+        String value = new String(db.get(brand.getBytes()));
+        return Result.d(value);
+    }
+
+    public void loadData2(String path) {
+        // 东方亮 工艺细致 VIP_SH 487855247 2015-4-4
+        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
+            Trie<Result>.Node brandNode = brandTrie.findNode(line);
+
+            if (brandNode == null || !brandNode.isWordEnding()) {
+                return;
+            }
+
+            String[] temp = line.split(" ");
+            int pos = temp.length;
+            String date = temp[--pos];
+            String amount = temp[--pos];
+            String location = temp[--pos];
+
+            brandNode.getValue().addAmount(new BigDecimal(amount));
+
+            Trie.Node dataNode = dataTrie.insertAndGetLastNode(date + "_" + brandNode.getValue().getOrder(), 1);
+            if (dataNode.getCount() == 1) {
+                brandNode.getValue().addCount();
+            }
+
+            queue.remove(brandNode.getValue());
+            queue.offer(brandNode.getValue());
+        });
+    }
 
     public void loadData(String path) {
         // 东方亮 工艺细致 VIP_SH 487855247 2015-4-4
