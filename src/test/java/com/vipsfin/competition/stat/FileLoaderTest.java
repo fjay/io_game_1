@@ -5,6 +5,7 @@ import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.List;
 
 /**
@@ -68,5 +69,16 @@ public class FileLoaderTest {
         SimpleTrie.TrieNode b = trie.insertAndGetLastNode("abc");
         System.out.println(a.getValue());
         System.out.println(b.getValue());
+    }
+
+    @Test
+    public void read() throws IOException {
+        RandomAccessFile randomAccessFile = new RandomAccessFile(FileUtil.file("brand_name_ok.txt"), "r");
+        randomAccessFile.seek(100);
+
+        int hasRead = 0;
+        byte[] buff = new byte[100];
+        hasRead = randomAccessFile.read(buff);
+        System.out.println(new String(buff, 0, hasRead));
     }
 }
