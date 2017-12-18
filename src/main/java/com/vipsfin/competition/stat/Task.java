@@ -37,7 +37,7 @@ public class Task {
         AtomicLong orderCounter = new AtomicLong();
 
         FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
-            Trie<Result>.Node node = brandTrie.insertAndGetLastNode(line.toLowerCase(), 1);
+            Trie<Result>.Node node = brandTrie.insertAndGetLastNode(line, 1);
             if (node.getValue() == null) {
                 node.setValue(new Result().setName(line).setOrder(orderCounter.getAndIncrement()));
             }
@@ -48,9 +48,9 @@ public class Task {
     public void loadData(String path) {
         // 东方亮 工艺细致 VIP_SH 487855247 2015-4-4
         FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
-            Trie<Result>.Node brandNode = brandTrie.findNode(line.toLowerCase());
+            Trie<Result>.Node brandNode = brandTrie.findNode(line);
 
-            if(brandNode == null || !brandNode.isWordEnding()){
+            if (brandNode == null || !brandNode.isWordEnding()) {
                 return;
             }
 
@@ -62,7 +62,7 @@ public class Task {
 
             brandNode.getValue().addAmount(new BigDecimal(amount));
 
-            Trie.Node dataNode = dataTrie.insertAndGetLastNode(brandNode.getValue().getOrder() + date, 1);
+            Trie.Node dataNode = dataTrie.insertAndGetLastNode(date + "_" + brandNode.getValue().getOrder(), 1);
             if (dataNode.getCount() == 1) {
                 brandNode.getValue().addCount();
             }
@@ -84,11 +84,11 @@ public class Task {
         queue.offer(result);
     }
 
-    public class Result {
+    public static class Result {
         private String name;
         private BigDecimal amount = new BigDecimal(0);
-        private Long count = 0l;
-        private Long order = 0l;
+        private Long count = 0L;
+        private Long order = 0L;
 
         public String getName() {
             return name;
@@ -138,11 +138,7 @@ public class Task {
 
         @Override
         public String toString() {
-            return "{" +
-                    "name='" + name + '\'' +
-                    ", amount=" + amount +
-                    ", count=" + count +
-                    '}';
+            return name;
         }
     }
 }

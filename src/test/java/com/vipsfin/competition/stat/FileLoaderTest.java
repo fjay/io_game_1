@@ -50,6 +50,7 @@ public class FileLoaderTest {
         task.loadBrand("brand_name_ok.txt");
         task.loadData("bisai_1.txt");
         task.count();
+
         System.out.println(task.result());
     }
 }

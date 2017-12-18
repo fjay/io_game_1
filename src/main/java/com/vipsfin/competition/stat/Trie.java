@@ -109,20 +109,20 @@ public class Trie<V> {
         if (key == null)
             throw new IllegalArgumentException("Null not permitted");
 
-        Node now = root;
+        Node current = root;
         Node prev = null;
         for (int i = 0; i < key.length(); i++) {
             char ch = key.charAt(i);
-            Node nextNode = now.children.get(ch);
+            Node nextNode = current.children.get(ch);
             if (nextNode == null) {
                 break;
             } else {
-                prev = now;
-                now = nextNode;
+                prev = current;
+                current = nextNode;
             }
         }
 
-        return now.isWordEnding ? now : prev;
+        return current.isWordEnding ? current : prev;
     }
 
     public Node insertAndGetLastNode(String key, long numInserts) {
@@ -130,27 +130,20 @@ public class Trie<V> {
         if (numInserts <= 0) throw new IllegalArgumentException("numInserts has to be greater than zero");
 
         Node node = root;
-        // Process each character one at a time
         for (int i = 0; i < key.length(); ++i) {
-
             char ch = key.charAt(i);
             Node nextNode = node.children.get(ch);
 
-            // The next character in this string does not yet exist in trie
             if (nextNode == null) {
-
                 nextNode = new Node(ch);
                 node.addChild(nextNode, ch);
-                // Next character exists in trie.
             }
 
             node = nextNode;
-            node.count += numInserts;
-
         }
 
-        // The root itself is not a word ending. It is simply a placeholder.
         if (node != root) {
+            node.count += numInserts;
             node.isWordEnding = true;
         }
 
