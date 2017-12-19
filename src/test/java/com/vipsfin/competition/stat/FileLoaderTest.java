@@ -49,21 +49,31 @@ public class FileLoaderTest {
     @Test
     public void result() throws IOException {
         Task task = new Task();
-        task.loadBrand("brand_name_ok.txt");
-        task.loadData("bisai_1.txt");
+        task.loadBrand("/Users/fjay/Documents/work/vip/code/game/io/test/brand_name.txt");
+        task.loadData("/Users/fjay/Documents/work/vip/code/game/io/test/matchs.txt");
         task.count();
 
         System.out.println(task.result());
     }
 
     @Test
-    public void loadBrand() throws IOException {
+    public void loadBrand() {
         Task task = new Task();
         long a = System.currentTimeMillis();
-        task.loadBrand("F:\\name\\brand_name.txt");
+        task.loadBrand("/Users/fjay/Documents/work/vip/code/game/io/test/brand_name.txt");
         long b = System.currentTimeMillis();
         System.out.println(b - a);
-        System.out.println(task.get("fNWn cuVkPQMaEDOgQ").s());
+        System.out.println(task.getOrder("fNWn cuVkPQMaEDOgQ"));
+    }
+
+    @Test
+    public void loadData() {
+        long a = System.currentTimeMillis();
+        Task task = new Task();
+        task.loadBrand("/Users/fjay/Documents/work/vip/code/game/io/test/brand_name.txt");
+        task.split("/Users/fjay/Documents/work/vip/code/game/io/test/matchs.txt");
+        long b = System.currentTimeMillis();
+        System.out.println(b - a);
     }
 
     @Test
