@@ -1,6 +1,7 @@
 package com.vipsfin.competition.stat;
 
 import com.xiaoleilu.hutool.io.FileUtil;
+import com.xiaoleilu.hutool.io.IoUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import com.xiaoleilu.hutool.log.Log;
@@ -135,16 +136,16 @@ public class Task {
             e.printStackTrace();
         }
 
-        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
-            if (!dbExist) {
-                db.put(line.getBytes(), intToByteArray(orderCounter.getAndIncrement()));
-
-                if (orderCounter.get() % 100000 == 0) {
-                    System.out.println(orderCounter.get());
-                    System.out.println(System.currentTimeMillis());
-                }
-            }
-        });
+//        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
+//            if (!dbExist) {
+//                db.put(line.getBytes(), intToByteArray(orderCounter.getAndIncrement()));
+//
+//                if (orderCounter.get() % 100000 == 0) {
+//                    System.out.println(orderCounter.get());
+//                    System.out.println(System.currentTimeMillis());
+//                }
+//            }
+//        });
 
         brandNames = new HashMap<>();
         dBrandNames = new HashMap<>();
@@ -190,7 +191,8 @@ public class Task {
         AtomicLong counter = new AtomicLong();
         File file = FileUtil.file(path);
 
-        Writer[] writers = new Writer[100];
+        int fileSize = 50;
+        Writer[] writers = new Writer[fileSize];
         for (int i = 0; i < writers.length; i++) {
             writers[i] = FileUtil.getWriter(file.getParentFile().getAbsolutePath() + "/s/" + i + ".txt",
                     Charset.defaultCharset(), true);
@@ -218,12 +220,17 @@ public class Task {
                 return;
             }
 
-//            int index = Math.abs(brandKey.hashCode()) % 100;
-//            try {
-//                writers[index].append(date.replace("-", "")).append(",").append(brandKey).append("\n");
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+            int index = Math.abs(brandKey.hashCode()) % fileSize;
+            try {
+                writers[index].append(date.replace("-", ""))
+                        .append(",")
+                        .append(brandKey)
+                        .append(",")
+                        .append(amount)
+                        .append("\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             counter.incrementAndGet();
 
@@ -231,6 +238,10 @@ public class Task {
                 System.out.println(brandKey + "_" + counter.get());
             }
         });
+
+        for (Writer writer : writers) {
+            IoUtil.close(writer);
+        }
     }
 
     public void loadData(String path) {
