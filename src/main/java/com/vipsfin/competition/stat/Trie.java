@@ -86,8 +86,7 @@ public class Trie<V> {
             }
 
             node = nextNode;
-            node.count += numInserts;
-
+            node.addCount(numInserts);
         }
 
         // The root itself is not a word ending. It is simply a placeholder.
@@ -126,67 +125,30 @@ public class Trie<V> {
     }
 
     public Node insertAndGetLastNode(String key, long numInserts) {
-        if (key == null) throw new IllegalArgumentException("Null not permitted in trie");
-        if (numInserts <= 0) throw new IllegalArgumentException("numInserts has to be greater than zero");
+        return insertAndGetLastNode(key, root, numInserts);
+    }
 
-        Node node = root;
+    public Node insertAndGetLastNode(String key, Node rootNode, long numInserts) {
+        if (key == null) throw new IllegalArgumentException("Null not permitted in trie");
+
         for (int i = 0; i < key.length(); ++i) {
             char ch = key.charAt(i);
-            Node nextNode = node.children.get(ch);
+            Node nextNode = rootNode.children.get(ch);
 
             if (nextNode == null) {
                 nextNode = new Node(ch);
-                node.addChild(nextNode, ch);
+                rootNode.addChild(nextNode, ch);
             }
 
-            node = nextNode;
+            rootNode = nextNode;
         }
 
-        if (node != root) {
-            node.count += numInserts;
-            node.isWordEnding = true;
+        if (rootNode != root) {
+            rootNode.addCount(numInserts);
+            rootNode.isWordEnding = true;
         }
 
-        return node;
-    }
-
-    // This delete function allows you to delete keys from the trie
-    // (even those which were not previously inserted into the trie).
-    // This means that it may be the case that you delete a prefix which
-    // cuts off the access to numerous other strings starting with
-    // that prefix.
-    public boolean delete(String key, int numDeletions) {
-
-        // We cannot delete something that doesn't exist
-        if (!startWith(key)) return false;
-
-        if (numDeletions <= 0)
-            throw new IllegalArgumentException("numDeletions has to be positive");
-
-        Node node = root;
-        for (int i = 0; i < key.length(); i++) {
-
-            char ch = key.charAt(i);
-            Node curNode = node.children.get(ch);
-            curNode.count -= numDeletions;
-
-            // Cut this edge if the current node has a count <= 0
-            // This means that all the prefixes below this point are inaccessible
-            if (curNode.count <= 0) {
-                node.children.remove(ch);
-                curNode.children = null;
-                curNode = null;
-                return true;
-            }
-
-            node = curNode;
-
-        }
-        return true;
-    }
-
-    public boolean delete(String key) {
-        return delete(key, 1);
+        return rootNode;
     }
 
     public Node getLastNode(String key) {
@@ -208,12 +170,7 @@ public class Trie<V> {
 
     public boolean contains(String key) {
         Node node = getLastNode(key);
-
-        if (node != null) {
-            return node.isWordEnding;
-        }
-
-        return false;
+        return node != null && node.isWordEnding;
     }
 
 

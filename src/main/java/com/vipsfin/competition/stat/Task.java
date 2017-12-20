@@ -6,10 +6,7 @@ import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
-import com.xiaoleilu.hutool.util.StrUtil;
 import org.iq80.leveldb.DB;
-import org.iq80.leveldb.Options;
-import org.iq80.leveldb.impl.Iq80DBFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,16 +23,17 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Task {
 
     protected Trie<Result> brandTrie = new Trie<>();
-    protected Trie dataTrie = new Trie();
     protected DB db;
     private static char[] array = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
             .toCharArray();
     private static String numStr = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private final Log log = LogFactory.get();
-    protected Result[] results;
     protected Map<Integer, Integer> brandNames;
     protected Map<String, Integer> dBrandNames;
-    protected BoundedPriorityQueue<SortResult> queue = new BoundedPriorityQueue<>(
+
+    protected int BATCH_SIZE = 100;
+
+    protected BoundedPriorityQueue<Result> queue = new BoundedPriorityQueue<>(
             40,
             (o1, o2) -> {
                 int level1 = -o1.getCount().compareTo(o2.getCount());
@@ -93,8 +91,8 @@ public class Task {
 //        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
 //            if (counter.incrementAndGet() % 100000 == 0) {
 //                long b = System.currentTimeMillis();
-//                System.out.println(b - a);
-//                System.out.println(results());
+//                log.info(b - a);
+//                log.info(results());
 //            }
 //
 //            Trie<Result>.Node brandNode = brandTrie.findNode(line);
@@ -120,50 +118,7 @@ public class Task {
 //            queue.offer(brandNode.getValue());
 //        });
 //    }
-
-    public void loadBrand(String path) {
-        AtomicInteger orderCounter = new AtomicInteger();
-
-        File file = FileUtil.file(path);
-        File dbFile = new File(file.getParentFile().getAbsolutePath() + "/index");
-        boolean dbExist = dbFile.exists();
-
-        Options options = new Options();
-        options.createIfMissing(true);
-        try {
-            db = new Iq80DBFactory().open(dbFile, options);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-//        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
-//            if (!dbExist) {
-//                db.put(line.getBytes(), intToByteArray(orderCounter.getAndIncrement()));
-//
-//                if (orderCounter.get() % 100000 == 0) {
-//                    System.out.println(orderCounter.get());
-//                    System.out.println(System.currentTimeMillis());
-//                }
-//            }
-//        });
-
-        brandNames = new HashMap<>();
-        dBrandNames = new HashMap<>();
-
-        orderCounter.set(0);
-        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
-            // TODO Checksum
-            if (brandNames.containsKey(line.hashCode())) {
-                brandNames.put(line.hashCode(), -1);
-
-                dBrandNames.put(line, orderCounter.get());
-            } else {
-                brandNames.put(line.hashCode(), orderCounter.get());
-            }
-        });
-
-        System.out.println(brandNames.size() + "-" + dBrandNames.size());
-    }
+private Trie<BigDecimal> dataTrie = new Trie<>();
 
     public Integer getOrder(String brand) {
         byte[] value = db.get(brand.getBytes());
@@ -184,6 +139,54 @@ public class Task {
             return dBrandNames.get(brand);
         }
         return order;
+    }
+
+    private Map<Integer, BigDecimal[]> amountMap = new HashMap<>();
+    private Map<String, Boolean> countMap = new HashMap<>();
+
+    public void loadBrand(String path) {
+        AtomicInteger orderCounter = new AtomicInteger();
+
+        File file = FileUtil.file(path);
+//        File dbFile = new File(file.getParentFile().getAbsolutePath() + "/index");
+//        boolean dbExist = dbFile.exists();
+//
+//        Options options = new Options();
+//        options.createIfMissing(true);
+//        try {
+//            db = new Iq80DBFactory().open(dbFile, options);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+//        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
+//            if (!dbExist) {
+//                db.put(line.getBytes(), intToByteArray(orderCounter.getAndIncrement()));
+//
+//                if (orderCounter.get() % 100000 == 0) {
+//                    log.info(orderCounter.get());
+//                    log.info(System.currentTimeMillis());
+//                }
+//            }
+//        });
+
+        brandNames = new HashMap<>();
+        dBrandNames = new HashMap<>();
+
+        orderCounter.set(0);
+        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
+            orderCounter.incrementAndGet();
+            // TODO Checksum
+            if (brandNames.containsKey(line.hashCode())) {
+                brandNames.put(line.hashCode(), -1);
+
+                dBrandNames.put(line, orderCounter.get());
+            } else {
+                brandNames.put(line.hashCode(), orderCounter.get());
+            }
+        });
+
+        log.info(brandNames.size() + "-" + dBrandNames.size());
     }
 
     public void split(String path) {
@@ -227,6 +230,8 @@ public class Task {
                         .append(brandKey)
                         .append(",")
                         .append(amount)
+                        .append(",")
+                        .append(order.toString())
                         .append("\n");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -235,7 +240,7 @@ public class Task {
             counter.incrementAndGet();
 
             if (counter.get() % 1000000 == 0) {
-                System.out.println(brandKey + "_" + counter.get());
+                log.info(brandKey + "_" + counter.get());
             }
         });
 
@@ -251,54 +256,55 @@ public class Task {
         final AtomicLong a = new AtomicLong(System.currentTimeMillis());
         AtomicLong counter = new AtomicLong();
 
+
         // 东方亮 工艺细致 VIP_SH 487855247 2015-4-4
-        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
-            if (counter.incrementAndGet() % 100000 == 0) {
-                long b = System.currentTimeMillis();
-                System.out.println(b - a.get());
-                System.out.println(queue.toList());
-                a.set(b);
-            }
-
-            String[] temp = line.split(" ");
-            int pos = temp.length;
-            String date = temp[--pos];
-            String amount = temp[--pos];
-            String location = temp[--pos];
-            String desc = temp[--pos];
-
-            StringBuilder brand = new StringBuilder();
-            for (int i = 0; i < pos; i++) {
-                brand.append(temp[i]);
-                if (i < pos - 1) {
-                    brand.append(" ");
+        FileUtil.readUtf8Lines(file, new LineHandler() {
+            @Override
+            public void handle(String line) {
+                if (counter.incrementAndGet() % 500000 == 0) {
+                    long b = System.currentTimeMillis();
+                    log.info((b - a.get()) + "");
+                    a.set(b);
                 }
+
+                String[] temp = line.split(",");
+                int date = Integer.valueOf(temp[0]);
+                String brandKey = temp[1];
+                String amount = temp[2];
+                int order = Integer.valueOf(temp[3]);
+
+                String orderKey = tenToN(order, 62);
+                String dateKey = tenToN(date, 62);
+                String key = orderKey + dateKey;
+
+                BigDecimal[] amountAndCount = amountMap.get(order);
+
+                if (amountAndCount == null) {
+                    amountAndCount = new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
+                    amountMap.put(order, amountAndCount);
+                }
+
+                BigDecimal totalAmount = amountAndCount[0];
+                BigDecimal totalCount = amountAndCount[1];
+//                Trie<BigDecimal>.Node orderNode = dataTrie.insertAndGetLastNode(orderKey, 0);
+//                Trie<BigDecimal>.Node dateNode = dataTrie.insertAndGetLastNode(dateKey, orderNode, 1);
+                // 去除不重复+1
+                if (countMap.put(key, true) == null) {
+                    totalCount = totalCount.add(new BigDecimal(1));
+                    amountAndCount[1] = totalCount;
+                }
+
+                totalAmount = totalAmount.add(new BigDecimal(Integer.valueOf(amount)));
+                amountAndCount[0] = totalAmount;
+
+                Result result = new Result()
+                        .setName(brandKey)
+                        .setOrder(order)
+                        .setAmount(totalAmount)
+                        .setCount(totalCount.longValue());
+                queue.remove(result);
+                queue.offer(result);
             }
-
-            // count +
-            String brandKey = brand.toString();
-            Integer order = getOrderFast(brandKey);
-            if (order == null) {
-                return;
-            }
-
-            Result result = results[order];
-            if (result == null) {
-                result = new Result();
-                results[order] = result;
-            }
-
-            result.addAmount(new BigDecimal(amount));
-
-            String key = tenToN(Integer.valueOf(date.replace("-", "")), 62) + tenToN(order, 62);
-            Trie.Node dataNode = dataTrie.insertAndGetLastNode(key, 1);
-            if (dataNode.getCount() == 1) {
-                result.addCount();
-            }
-
-            SortResult sortResult = new SortResult(result).setOrder(order);
-            queue.remove(sortResult);
-            queue.offer(sortResult);
         });
     }
 
@@ -306,17 +312,28 @@ public class Task {
 
     }
 
-    public List<SortResult> result() {
+    public List<Result> result() {
         return queue.toList();
     }
 
-    public void sort(SortResult result) {
+    public void sort(Result result) {
         queue.offer(result);
     }
 
     public static class Result {
+        private String name;
+        private Integer order = 0;
         private BigDecimal amount = new BigDecimal(0);
         private Long count = 0L;
+
+        public String getName() {
+            return name;
+        }
+
+        public Result setName(String name) {
+            this.name = name;
+            return this;
+        }
 
         public BigDecimal addAmount(BigDecimal newValue) {
             amount = amount.add(newValue);
@@ -346,50 +363,26 @@ public class Task {
             return this;
         }
 
-        public static Result d(String value) {
-            if (StrUtil.isBlank(value)) {
-                return null;
-            }
-
-            String[] temp = value.split("_");
-            return new Result().setAmount(new BigDecimal(temp[0]))
-                    .setCount(Long.valueOf(temp[1]));
-        }
-
-        @Override
-        public String toString() {
-            return count + "";
-        }
-
-        public String s() {
-            return amount + "_" + count;
-        }
-    }
-
-    public static class SortResult extends Result {
-
-        private Integer order;
-
-        public SortResult(Result result) {
-            this.setCount(result.getCount());
-            this.setAmount(result.getAmount());
-        }
-
         public Integer getOrder() {
             return order;
         }
 
-        public SortResult setOrder(Integer order) {
+        public Result setOrder(Integer order) {
             this.order = order;
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return name;
         }
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            SortResult that = (SortResult) o;
-            return Objects.equals(order, that.order);
+            Result result = (Result) o;
+            return Objects.equals(order, result.order);
         }
 
         @Override

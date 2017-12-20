@@ -49,9 +49,10 @@ public class FileLoaderTest {
     @Test
     public void result() throws IOException {
         Task task = new Task();
-        task.loadBrand("/Users/fjay/Documents/work/vip/code/game/io/test/brand_name.txt");
-        task.loadData("/Users/fjay/Documents/work/vip/code/game/io/test/matchs.txt");
-        task.count();
+//        task.loadBrand("/Users/fjay/Documents/work/vip/code/game/io/test/brand_name.txt");
+        task.loadData("/Users/fjay/Documents/work/vip/code/game/io/test/s/0.txt");
+        task.loadData("/Users/fjay/Documents/work/vip/code/game/io/test/s/1.txt");
+        task.loadData("/Users/fjay/Documents/work/vip/code/game/io/test/s/2.txt");
 
         System.out.println(task.result());
     }
@@ -70,8 +71,8 @@ public class FileLoaderTest {
     public void loadData() {
         long a = System.currentTimeMillis();
         Task task = new Task();
-        task.loadBrand("F:\\name\\brand_name.txt");
-        task.split("F:\\matchs.txt");
+        task.loadBrand("/Users/fjay/Documents/work/vip/code/game/io/test/brand_name.txt");
+        task.split("/Users/fjay/Documents/work/vip/code/game/io/test/matchs.txt");
         long b = System.currentTimeMillis();
         System.out.println(b - a);
     }
