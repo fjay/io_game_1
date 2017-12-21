@@ -95,7 +95,7 @@ public class RecordService {
                     "," +
                     amount +
                     "\n";
-            int index = Math.abs(line.hashCode()) % fileSize;
+            int index = order % fileSize;
             return new Pair<>(index, record);
         });
     }

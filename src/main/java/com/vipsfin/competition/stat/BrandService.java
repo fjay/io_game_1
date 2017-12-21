@@ -28,21 +28,6 @@ public class BrandService {
 
     private static int size;
 
-//    public static Trie<BigDecimal> load(String path) {
-//        Trie<BigDecimal> brandTrie = new Trie<>();
-//        AtomicInteger counter = new AtomicInteger(0);
-//
-//        FileUtil.readUtf8Lines(FileUtil.file(path), (LineHandler) line -> {
-//            String[] temp = line.split(",");
-//            Trie<BigDecimal>.Node node = brandTrie.insertAndGetLastNode(temp[1], 0);
-//            node.setOrder(Integer.valueOf(temp[0]));
-//            node.setValue(BigDecimal.ZERO);
-//        });
-//
-//        log.info("Loaded {}, size: {}", path, counter.get());
-//        return brandTrie;
-//    }
-
     public static List<File> split(String path, int fileSize) {
         File file = FileUtil.file(path);
         String basePath = file.getParentFile().getAbsolutePath() + "/n";
@@ -117,7 +102,14 @@ public class BrandService {
     }
 
     public static String getName(Integer order) {
-        return new String(orderNameCache.get(Util.intToByteArray(order)));
+        byte[] value = orderNameCache.get(Util.intToByteArray(order));
+
+        if (value == null) {
+            log.error("order:{}", order);
+            return null;
+        }
+
+        return new String(value);
     }
 
     public static void clear() {

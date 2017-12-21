@@ -9,8 +9,8 @@ public class BrandServiceTest {
     @Test
     public void load() throws IOException {
         try {
-            BrandService.load("/Users/fjay/Documents/work/vip/code/game/io/test/brand_name.txt");
-            System.out.println(BrandService.getOrder("veZqNihZjBvuwRy"));
+            BrandService.load(TestUtil.BRAND_FILE_PATH);
+            System.out.println(BrandService.getOrder("A/E"));
         } finally {
             BrandService.close();
         }
