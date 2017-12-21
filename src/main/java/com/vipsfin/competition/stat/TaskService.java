@@ -6,6 +6,7 @@ import com.xiaoleilu.hutool.log.LogFactory;
 import com.xiaoleilu.hutool.util.ThreadUtil;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,15 +23,13 @@ public class TaskService {
     private BrandService brandService;
     private RecordService recordService;
 
-    public TaskService(BrandService brandService, RecordService recordService) {
-        this.recordService = recordService;
+    public TaskService(BrandService brandService) {
+        this.recordService = new RecordService(brandService);
         this.brandService = brandService;
     }
 
-    public List<Result2> run(String recordPath, int splitFileSize) throws Exception {
+    public List<String> run(String recordPath, int splitFileSize) throws Exception {
         List<File> files = recordService.split(recordPath, splitFileSize);
-
-        brandService.clear();
 
         BoundedPriorityQueue<Result2> resultQueue = recordService.newQueue();
 
@@ -46,6 +45,14 @@ public class TaskService {
 
         pool.shutdown();
         pool.awaitTermination(1, TimeUnit.HOURS);
-        return resultQueue.toList();
+
+        ArrayList<Result2> result2s = resultQueue.toList();
+        log.info(result2s.toString());
+
+        List<String> brandNames = new ArrayList<>();
+        for (Result2 result2 : result2s) {
+            brandNames.add(brandService.getName(result2.getOrder()));
+        }
+        return brandNames;
     }
 }

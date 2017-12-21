@@ -6,8 +6,8 @@ import java.util.List;
 
 public class RecordServiceTest {
 
-    private RecordService recordService = new RecordService();
     private BrandService brandService = new BrandService();
+    private RecordService recordService = new RecordService(brandService);
 
     @Test
     public void split() {
@@ -19,8 +19,8 @@ public class RecordServiceTest {
         brandService.load(TestUtil.BRAND_FILE_PATH);
 
         long a = System.currentTimeMillis();
-        List<Result2> result = new TaskService(brandService, recordService)
-                .run(TestUtil.RECORD_FILE_PATH, 100);
+
+        List<String> result = new TaskService(brandService).run(TestUtil.RECORD_FILE_PATH, 100);
         System.out.println(result);
 
         long b = System.currentTimeMillis();

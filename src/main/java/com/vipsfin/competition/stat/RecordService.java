@@ -15,10 +15,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class RecordService {
-
     private final Log log = LogFactory.get();
 
-    private BrandService brandService = new BrandService();
+    private BrandService brandService;
+
+    public RecordService(BrandService brandService) {
+        this.brandService = brandService;
+    }
 
     public BoundedPriorityQueue<Result2> sort(String path) {
         final AtomicLong a = new AtomicLong(System.currentTimeMillis());
@@ -67,7 +70,7 @@ public class RecordService {
         String basePath = file.getParentFile().getAbsolutePath() + "/r";
         log.info("Loading {}", path);
 
-        return Util.split(path, basePath, fileSize, parameters -> {
+        List<File> files = Util.split(path, basePath, fileSize, parameters -> {
             String line = parameters[0];
 
             String[] temp = line.split(" ");
@@ -100,10 +103,14 @@ public class RecordService {
             int index = order % fileSize;
             return new Pair<>(index, record);
         });
+
+        brandService.clear();
+
+        return files;
     }
 
     public BoundedPriorityQueue<Result2> newQueue() {
-        return new BoundedPriorityQueue<Result2>(
+        return new BoundedPriorityQueue<>(
                 40,
                 (o1, o2) -> {
                     try {

@@ -7,6 +7,7 @@ import com.xiaoleilu.hutool.lang.Func;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
 import com.xiaoleilu.hutool.util.CharsetUtil;
+import com.xiaoleilu.hutool.util.ThreadUtil;
 import javafx.util.Pair;
 
 import java.io.File;
@@ -15,6 +16,8 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Util {
@@ -58,6 +61,8 @@ public class Util {
 
     public static List<File> split(String filePath, String targetPath, int fileSize,
                                    Func<String, Pair<Integer, String>> data) {
+        ExecutorService pool = ThreadUtil.newExecutorByBlockingCoefficient(0.1f);
+
         List<File> files = new ArrayList<>();
         Writer[] writers = new Writer[fileSize];
         File file = FileUtil.file(filePath);
@@ -70,21 +75,30 @@ public class Util {
 
         AtomicLong counter = new AtomicLong();
         FileUtil.readUtf8Lines(file, (LineHandler) line -> {
-            Pair<Integer, String> x = data.call(line);
-            if (x == null) {
-                return;
-            }
+            pool.execute(() -> {
+                Pair<Integer, String> indexAndValue = data.call(line);
+                if (indexAndValue == null) {
+                    return;
+                }
 
-            try {
-                writers[x.getKey()].append(x.getValue());
-            } catch (IOException e) {
-                log.error(e, e.getMessage());
-            }
+                try {
+                    writers[indexAndValue.getKey()].append(indexAndValue.getValue());
+                } catch (IOException e) {
+                    log.error(e, e.getMessage());
+                }
 
-            if (counter.incrementAndGet() % 1000000 == 0) {
-                log.info("Splitting {}, size: {}", filePath, counter.get());
-            }
+                if (counter.incrementAndGet() % 1000000 == 0) {
+                    log.info("Splitting {}, size: {}", filePath, counter.get());
+                }
+            });
         });
+
+        pool.shutdown();
+        try {
+            pool.awaitTermination(1, TimeUnit.HOURS);
+        } catch (InterruptedException e) {
+            log.error(e, e.getMessage());
+        }
 
         for (Writer writer : writers) {
             IoUtil.close(writer);
