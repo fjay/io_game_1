@@ -16,9 +16,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class RecordService {
 
-    private static final Log log = LogFactory.get();
+    private final Log log = LogFactory.get();
 
-    public static BoundedPriorityQueue<Result2> sort(String path) {
+    private BrandService brandService = new BrandService();
+
+    public BoundedPriorityQueue<Result2> sort(String path) {
         final AtomicLong a = new AtomicLong(System.currentTimeMillis());
         AtomicLong counter = new AtomicLong();
         BoundedPriorityQueue<Result2> queue = newQueue();
@@ -60,7 +62,7 @@ public class RecordService {
         return queue;
     }
 
-    public static List<File> split(String path, int fileSize) {
+    public List<File> split(String path, int fileSize) {
         File file = FileUtil.file(path);
         String basePath = file.getParentFile().getAbsolutePath() + "/r";
         log.info("Loading {}", path);
@@ -84,7 +86,7 @@ public class RecordService {
             }
 
             String brandKey = brand.toString();
-            Integer order = BrandService.getOrder(brandKey);
+            Integer order = brandService.getOrder(brandKey);
             if (order == null) {
                 return null;
             }
@@ -100,7 +102,7 @@ public class RecordService {
         });
     }
 
-    public static BoundedPriorityQueue<Result2> newQueue() {
+    public BoundedPriorityQueue<Result2> newQueue() {
         return new BoundedPriorityQueue<Result2>(
                 40,
                 (o1, o2) -> {

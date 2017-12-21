@@ -1,6 +1,8 @@
 package com.vipsfin.competition.stat;
 
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
+import com.xiaoleilu.hutool.log.Log;
+import com.xiaoleilu.hutool.log.LogFactory;
 import com.xiaoleilu.hutool.util.ThreadUtil;
 
 import java.io.File;
@@ -13,20 +15,28 @@ import java.util.concurrent.TimeUnit;
  */
 public class TaskService {
 
-    private static ExecutorService pool = ThreadUtil.newExecutor(2);
+    private final Log log = LogFactory.get();
 
-    public static List<Result2> run(String brandPath, String recordPath, int splitFileSize) throws Exception {
-        BrandService.load(brandPath);
+    private ExecutorService pool = ThreadUtil.newExecutor(3);
 
-        List<File> files = RecordService.split(recordPath, splitFileSize);
+    private BrandService brandService;
+    private RecordService recordService;
 
-        BrandService.clear();
+    public TaskService(BrandService brandService, RecordService recordService) {
+        this.recordService = recordService;
+        this.brandService = brandService;
+    }
 
-        BoundedPriorityQueue<Result2> resultQueue = RecordService.newQueue();
+    public List<Result2> run(String recordPath, int splitFileSize) throws Exception {
+        List<File> files = recordService.split(recordPath, splitFileSize);
+
+        brandService.clear();
+
+        BoundedPriorityQueue<Result2> resultQueue = recordService.newQueue();
 
         for (File recordFile : files) {
             pool.execute(() -> {
-                BoundedPriorityQueue<Result2> tempQueue = RecordService.sort(recordFile.getAbsolutePath());
+                BoundedPriorityQueue<Result2> tempQueue = recordService.sort(recordFile.getAbsolutePath());
 
                 for (Result2 result2 : tempQueue.toList()) {
                     resultQueue.offer(result2);

@@ -47,7 +47,7 @@ public class Result2 {
 
     @Override
     public String toString() {
-        return BrandService.getName(order) + "|" + count + "|" + amount;
+        return order + "|" + count + "|" + amount;
     }
 
     @Override

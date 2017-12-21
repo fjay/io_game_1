@@ -21,14 +21,13 @@ public class BrandService {
 
     private static final Log log = LogFactory.get();
 
-    private static Map<Integer, Integer> nameOrderLevel1Cache = new HashMap<>();
-    private static Map<String, Integer> nameOrderLevel2Cache = new HashMap<>();
-    private static DB nameOrderLevel3Cache;
-    private static DB orderNameCache;
+    private Map<Integer, Integer> nameOrderLevel1Cache = new HashMap<>();
+    private Map<String, Integer> nameOrderLevel2Cache = new HashMap<>();
+    private DB orderNameCache;
 
-    private static int size;
+    private int size;
 
-    public static List<File> split(String path, int fileSize) {
+    public List<File> split(String path, int fileSize) {
         File file = FileUtil.file(path);
         String basePath = file.getParentFile().getAbsolutePath() + "/n";
         AtomicInteger orderCounter = new AtomicInteger();
@@ -40,19 +39,17 @@ public class BrandService {
         });
     }
 
-    public static void load(String path) throws IOException {
+    public void load(String path) throws IOException {
         File file = FileUtil.file(path);
         String basePath = file.getParentFile().getAbsolutePath();
 
         FileUtil.mkdir(basePath);
-        File level2CacheFile = new File(basePath + "/n");
         File orderNameCacheFile = new File(basePath + "/o");
-        boolean isLevel2CacheFileExists = level2CacheFile.exists();
+        boolean isCacheFileExists = orderNameCacheFile.exists();
 
         Options options = new Options();
         options.createIfMissing(true);
 
-        nameOrderLevel3Cache = Iq80DBFactory.factory.open(level2CacheFile, options);
         orderNameCache = Iq80DBFactory.factory.open(orderNameCacheFile, options);
 
         AtomicInteger counter = new AtomicInteger(0);
@@ -62,10 +59,10 @@ public class BrandService {
 
             if (nameOrderLevel1Cache.put(level1Key, order) != null) {
                 nameOrderLevel1Cache.put(level1Key, -1);
+                nameOrderLevel2Cache.put(line, order);
             }
 
-            if (!isLevel2CacheFileExists) {
-                nameOrderLevel3Cache.put(line.getBytes(), Util.intToByteArray(order));
+            if (!isCacheFileExists) {
                 orderNameCache.put(Util.intToByteArray(order), line.getBytes());
             }
 
@@ -80,10 +77,14 @@ public class BrandService {
 
         counter.set(0);
         FileUtil.readUtf8Lines(file, (LineHandler) line -> {
-            getOrder(line);
-
             if (counter.incrementAndGet() % 1000000 == 0) {
                 log.info("Loading level2 {}, counter: {}", path, counter.get());
+            }
+
+            Integer value = getOrder(line);
+
+            if (value == null) {
+                nameOrderLevel2Cache.put(line, counter.get());
             }
         });
 
@@ -91,7 +92,7 @@ public class BrandService {
                 path, size, nameOrderLevel1Cache.size(), nameOrderLevel2Cache.size());
     }
 
-    public static Integer getOrder(String brand) {
+    public Integer getOrder(String brand) {
         Integer value = nameOrderLevel1Cache.get(brand.hashCode());
         if (value == null) {
             return null;
@@ -99,21 +100,12 @@ public class BrandService {
 
         if (value == -1) {
             value = nameOrderLevel2Cache.get(brand);
-            if (value == null) {
-                byte[] valueOfLevel2 = nameOrderLevel3Cache.get(brand.getBytes());
-                if (valueOfLevel2 == null) {
-                    return null;
-                }
-
-                value = Util.byteArrayToInt(valueOfLevel2);
-                nameOrderLevel2Cache.put(brand, value);
-            }
         }
 
         return value;
     }
 
-    public static String getName(Integer order) {
+    public String getName(Integer order) {
         byte[] value = orderNameCache.get(Util.intToByteArray(order));
 
         if (value == null) {
@@ -124,17 +116,16 @@ public class BrandService {
         return new String(value);
     }
 
-    public static void clear() {
+    public void clear() {
         nameOrderLevel2Cache.clear();
         nameOrderLevel1Cache.clear();
     }
 
-    public static void close() {
-        IoUtil.close(nameOrderLevel3Cache);
+    public void close() {
         IoUtil.close(orderNameCache);
     }
 
-    public static int getSize() {
+    public int getSize() {
         return size;
     }
 }
