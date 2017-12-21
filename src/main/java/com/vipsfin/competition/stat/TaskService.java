@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class TaskService {
 
-    public List<Result2> run(String brandPath, String recordPath, int splitFileSize) {
+    public static List<Result2> run(String brandPath, String recordPath, int splitFileSize) {
         List<File> brandFiles = BrandService.split(brandPath, splitFileSize);
         List<File> recordFiles = RecordService.split(recordPath, splitFileSize);
 

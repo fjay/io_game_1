@@ -55,7 +55,6 @@ public class BrandService {
         });
     }
 
-
     public static void load(String path) throws IOException {
 
         File file = FileUtil.file(path);
@@ -122,6 +121,7 @@ public class BrandService {
     }
 
     public static void clear() {
+        nameOrderLevel2Cache.clear();
         nameOrderLevel1Cache.clear();
     }
 
