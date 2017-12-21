@@ -35,6 +35,11 @@
             <version>3.2.3</version>
         </dependency>
         <dependency>
+            <groupId>org.team4u</groupId>
+            <artifactId>team-kit-core</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+        <dependency>
             <groupId>org.iq80.leveldb</groupId>
             <artifactId>leveldb</artifactId>
             <version>0.9</version>
@@ -65,6 +70,14 @@
         <repository>
             <id>aliyun</id>
             <url>http://maven.aliyun.com/nexus/content/groups/public</url>
+        </repository>
+        <repository>
+            <id>bintray-team4u</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/team4u/team4u</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
 </project>
