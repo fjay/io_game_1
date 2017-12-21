@@ -16,6 +16,7 @@ public class Trie<V> {
     public class Node {
         private char ch;
         private long count = 0;
+        private int order = 0;
         private boolean isWordEnding = false;
         private V value;
 
@@ -52,6 +53,15 @@ public class Trie<V> {
 
         public char getCh() {
             return ch;
+        }
+
+        public int getOrder() {
+            return order;
+        }
+
+        public Node setOrder(int order) {
+            this.order = order;
+            return this;
         }
     }
 
