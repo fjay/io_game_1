@@ -41,7 +41,6 @@ public class BrandService {
     }
 
     public static void load(String path) throws IOException {
-
         File file = FileUtil.file(path);
         String basePath = file.getParentFile().getAbsolutePath();
 
@@ -76,7 +75,20 @@ public class BrandService {
         });
 
         size = counter.get();
-        log.info("Loaded {}, total:{}, level1:{}", path, size, nameOrderLevel1Cache.size());
+        log.info("Loaded {}, total:{}, level1:{}",
+                path, size, nameOrderLevel1Cache.size(), nameOrderLevel2Cache.size());
+
+        counter.set(0);
+        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
+            getOrder(line);
+
+            if (counter.incrementAndGet() % 1000000 == 0) {
+                log.info("Loading level2 {}, counter: {}", path, counter.get());
+            }
+        });
+
+        log.info("Loaded {}, total:{}, level1:{}, level2:{}",
+                path, size, nameOrderLevel1Cache.size(), nameOrderLevel2Cache.size());
     }
 
     public static Integer getOrder(String brand) {

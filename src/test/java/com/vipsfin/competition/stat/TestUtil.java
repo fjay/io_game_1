@@ -7,8 +7,8 @@ import com.xiaoleilu.hutool.io.FileUtil;
  */
 public class TestUtil {
 
-    public static final String BRAND_FILE_PATH = FileUtil.file("brand_name_ok.txt").getAbsolutePath();
+    public static final String BRAND_FILE_PATH = FileUtil.file("F:\\io\\brand_name.txt").getAbsolutePath();
 
-    public static final String RECORD_FILE_PATH = FileUtil.file("bisai_1.txt").getAbsolutePath();
+    public static final String RECORD_FILE_PATH = FileUtil.file("F:\\io\\matchs.txt").getAbsolutePath();
 
 }
