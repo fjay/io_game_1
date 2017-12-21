@@ -14,6 +14,11 @@ public class RecordServiceTest {
 
     @Test
     public void x() {
-        System.out.println(RecordService.sort("/Users/fjay/Documents/work/vip/code/game/io/test/r/0.txt").toList());
+        long a = System.currentTimeMillis();
+        for (int i = 0; i < 50; i++) {
+            RecordService.sort("/Users/fjay/Documents/work/vip/code/game/io/test/r/" + i + ".txt");
+        }
+        long b = System.currentTimeMillis();
+        System.out.println(b - a);
     }
 }

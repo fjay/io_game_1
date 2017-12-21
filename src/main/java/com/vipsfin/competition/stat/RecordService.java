@@ -9,10 +9,10 @@ import javafx.util.Pair;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static com.vipsfin.competition.stat.Util.tenToN;
 
 public class RecordService {
 
@@ -25,11 +25,12 @@ public class RecordService {
         File file = FileUtil.file(path);
 
         FileUtil.readUtf8Lines(file, new LineHandler() {
-            private Trie<BigDecimal> dataTrie = new Trie<>();
+            // brand -> (date -> amount)
+            private Map<Integer, Map<Integer, BigDecimal>> dataMap = new HashMap<>();
 
             @Override
             public void handle(String line) {
-                if (counter.incrementAndGet() % 500000 == 0) {
+                if (counter.incrementAndGet() % 1000000 == 0) {
                     long b = System.currentTimeMillis();
                     log.info(file.getName() + ":" + (b - a.get()));
                     a.set(b);
@@ -40,28 +41,15 @@ public class RecordService {
                 Integer brandOrder = Integer.valueOf(temp[1]);
                 Integer amount = Integer.valueOf(temp[2]);
 
-                String brandOrderKey = tenToN(brandOrder, 62);
-                String dateKey = tenToN(date, 62);
-
-                Trie<BigDecimal>.Node brandNode = dataTrie.insertAndGetLastNode(brandOrderKey, 1);
-                Trie<BigDecimal>.Node recordNode = dataTrie.insertAndGetLastNode(dateKey, brandNode, 1);
-                // 只统计一次日期
-                if (recordNode.getCount() == 1) {
-                    brandNode.addCount(1);
-                }
-
-                if (brandNode.getValue() == null) {
-                    brandNode.setValue(BigDecimal.ZERO);
-                }
-
-                // 统计销售额
-                BigDecimal totalAmount = brandNode.getValue().add(new BigDecimal(amount));
-                brandNode.setValue(totalAmount);
+                Map<Integer, BigDecimal> dateAmountMap = dataMap.computeIfAbsent(brandOrder, k -> new HashMap<>());
+                BigDecimal totalAmount = dateAmountMap.computeIfAbsent(date, k -> BigDecimal.ZERO);
+                totalAmount = totalAmount.add(new BigDecimal(amount));
+                dateAmountMap.put(date, totalAmount);
 
                 Result2 result = new Result2()
                         .setOrder(brandOrder)
                         .setAmount(totalAmount)
-                        .setCount(brandNode.getCount());
+                        .setCount((long) dateAmountMap.size());
 
                 queue.remove(result);
                 queue.offer(result);
