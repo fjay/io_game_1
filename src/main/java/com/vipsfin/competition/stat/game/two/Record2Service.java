@@ -8,7 +8,7 @@ import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
-import javafx.util.Pair;
+import org.team4u.kit.core.lang.Pair;
 
 import java.io.File;
 import java.math.BigDecimal;

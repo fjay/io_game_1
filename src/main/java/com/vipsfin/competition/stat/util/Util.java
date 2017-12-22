@@ -7,7 +7,7 @@ import com.xiaoleilu.hutool.lang.Func;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
 import com.xiaoleilu.hutool.util.CharsetUtil;
-import javafx.util.Pair;
+import org.team4u.kit.core.lang.Pair;
 
 import java.io.File;
 import java.io.IOException;
