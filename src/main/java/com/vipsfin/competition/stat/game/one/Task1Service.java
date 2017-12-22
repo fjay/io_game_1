@@ -10,7 +10,7 @@ import java.util.*;
 
 public class Task1Service implements TaskService{
     @Override
-    public List<String> run(String recordPath, int splitFileCount) throws Exception {
+    public List<String> run(String recordPath) throws Exception {
         long time = System.currentTimeMillis();
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(recordPath)));
         String line = null;
