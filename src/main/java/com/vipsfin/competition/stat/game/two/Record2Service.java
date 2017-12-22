@@ -12,9 +12,7 @@ import org.team4u.kit.core.lang.Pair;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Record2Service {
@@ -35,27 +33,29 @@ public class Record2Service {
         File file = FileUtil.file(path);
 
         FileUtil.readUtf8Lines(file, new LineHandler() {
-            // brand -> (date -> amount)
-            private Map<Integer, Map<Integer, BigDecimal>> dataMap = new HashMap<>();
+            private Map<Integer, Set<String>> recordDateMap = new HashMap<>();
+            private Map<Integer, BigDecimal> recordAmountMap = new HashMap<>();
 
             @Override
             public void handle(String line) {
                 counter.incrementAndGet();
 
                 String[] temp = line.split(",");
-                Integer date = Integer.valueOf(temp[0]);
+                String date = temp[0];
                 Integer brandOrder = Integer.valueOf(temp[1]);
                 Integer amount = Integer.valueOf(temp[2]);
 
-                Map<Integer, BigDecimal> dateAmountMap = dataMap.computeIfAbsent(brandOrder, k -> new HashMap<>());
-                BigDecimal totalAmount = dateAmountMap.computeIfAbsent(date, k -> BigDecimal.ZERO);
+                Set<String> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashSet<>());
+                uniqueDates.add(date);
+
+                BigDecimal totalAmount = recordAmountMap.computeIfAbsent(brandOrder, k -> BigDecimal.ZERO);
                 totalAmount = totalAmount.add(new BigDecimal(amount));
-                dateAmountMap.put(date, totalAmount);
+                recordAmountMap.put(brandOrder, totalAmount);
 
                 Result2 result = new Result2()
                         .setOrder(brandOrder)
                         .setAmount(totalAmount)
-                        .setCount((long) dateAmountMap.size());
+                        .setCount(uniqueDates.size());
 
                 queue.remove(result);
                 queue.offer(result);
@@ -97,7 +97,7 @@ public class Record2Service {
                         return null;
                     }
 
-                    String record = date.replace("-", "") +
+                    String record = date +
                             "," +
                             order +
                             "," +
@@ -116,23 +116,18 @@ public class Record2Service {
         return new BoundedPriorityQueue<>(
                 40,
                 (o1, o2) -> {
-                    try {
-                        int level1 = -o1.getCount().compareTo(o2.getCount());
-                        if (level1 == 0) {
-                            int level2 = -o1.getAmount().compareTo(o2.getAmount());
+                    int level1 = -o1.getCount().compareTo(o2.getCount());
+                    if (level1 == 0) {
+                        int level2 = -o1.getAmount().compareTo(o2.getAmount());
 
-                            if (level2 == 0) {
-                                return o1.getOrder().compareTo(o2.getOrder());
-                            }
-
-                            return level2;
+                        if (level2 == 0) {
+                            return o1.getOrder().compareTo(o2.getOrder());
                         }
 
-                        return level1;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return 0;
+                        return level2;
                     }
+
+                    return level1;
                 }
         );
     }

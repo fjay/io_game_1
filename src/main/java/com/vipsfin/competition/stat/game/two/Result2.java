@@ -6,13 +6,7 @@ import java.util.Objects;
 public class Result2 {
     private Integer order = 0;
     private BigDecimal amount = new BigDecimal(0);
-    private Long count = 0L;
-
-    public BigDecimal addAmount(BigDecimal newValue) {
-        amount = amount.add(newValue);
-        return amount;
-    }
-
+    private Integer count = 0;
 
     public BigDecimal getAmount() {
         return amount;
@@ -23,15 +17,11 @@ public class Result2 {
         return this;
     }
 
-    public Long addCount() {
-        return count++;
-    }
-
-    public Long getCount() {
+    public Integer getCount() {
         return count;
     }
 
-    public Result2 setCount(Long count) {
+    public Result2 setCount(Integer count) {
         this.count = count;
         return this;
     }
