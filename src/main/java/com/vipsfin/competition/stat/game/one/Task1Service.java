@@ -1,6 +1,7 @@
 package com.vipsfin.competition.stat.game.one;
 
 import com.vipsfin.competition.stat.TaskService;
+import com.vipsfin.competition.stat.game.BrandService;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 
 import java.io.BufferedReader;
@@ -9,6 +10,13 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class Task1Service implements TaskService{
+
+    private BrandService brandService;
+
+    public Task1Service(BrandService brandService) {
+        this.brandService = brandService;
+    }
+
     @Override
     public List<String> run(String recordPath) throws Exception {
         long time = System.currentTimeMillis();
