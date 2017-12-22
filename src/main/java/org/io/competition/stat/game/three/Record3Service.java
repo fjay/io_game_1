@@ -1,10 +1,10 @@
 package org.io.competition.stat.game.three;
 
+import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import org.io.competition.stat.game.BrandService;
 import org.io.competition.stat.game.two.Record2Service;
-import org.io.competition.stat.game.two.RecordLineHandler;
 import org.io.competition.stat.game.two.Result2;
-import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
+import org.io.competition.stat.game.two.SimpleRecordLineHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +20,8 @@ public class Record3Service extends Record2Service {
     }
 
     @Override
-    protected RecordLineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
-        return new RecordLineHandler(counter, queue) {
+    protected SimpleRecordLineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
+        return new SimpleRecordLineHandler(counter, queue) {
             private final static String MAX_COUNT_KEY = "";
             private Map<Integer, Map<String, Integer>> recordDateMap = new HashMap<>();
 

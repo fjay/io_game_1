@@ -11,13 +11,13 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author Jay Wu
  */
-public abstract class RecordLineHandler implements LineHandler {
+public abstract class SimpleRecordLineHandler implements LineHandler {
 
     protected BoundedPriorityQueue<Result2> queue;
     private AtomicLong counter;
     private Map<Integer, BigDecimal> recordAmountMap = new HashMap<>();
 
-    public RecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
+    public SimpleRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
         this.counter = counter;
         this.queue = queue;
     }
@@ -36,9 +36,9 @@ public abstract class RecordLineHandler implements LineHandler {
         recordAmountMap.put(brandOrder, totalAmount);
 
         Result2 result = new Result2()
-                .setOrder(brandOrder)
-                .setAmount(totalAmount)
                 .setCount(count(brandOrder, date));
+        result.setOrder(brandOrder)
+                .setAmount(totalAmount);
 
         queue.remove(result);
         queue.offer(result);

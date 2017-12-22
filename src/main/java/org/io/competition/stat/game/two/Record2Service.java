@@ -1,12 +1,15 @@
 package org.io.competition.stat.game.two;
 
-import org.io.competition.stat.game.BrandService;
-import org.io.competition.stat.util.Stopwatch;
-import org.io.competition.stat.util.Util;
 import com.xiaoleilu.hutool.io.FileUtil;
+import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
+import org.io.competition.stat.game.BrandService;
+import org.io.competition.stat.game.Record;
+import org.io.competition.stat.game.one.RecordLineHandler;
+import org.io.competition.stat.util.Stopwatch;
+import org.io.competition.stat.util.Util;
 import org.team4u.kit.core.lang.Pair;
 
 import java.io.File;
@@ -39,8 +42,8 @@ public class Record2Service {
         return queue;
     }
 
-    protected RecordLineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
-        return new RecordLineHandler(counter, queue) {
+    protected LineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
+        return new SimpleRecordLineHandler(counter, queue) {
             private Map<Integer, Set<String>> recordDateMap = new HashMap<>();
 
             @Override
@@ -61,35 +64,20 @@ public class Record2Service {
                 parameters -> {
                     String line = parameters[0];
 
-                    String[] temp = line.split(" ");
-                    int pos = temp.length;
-                    String date = temp[--pos];
-                    Integer amount = Integer.valueOf(temp[--pos]);
-                    String location = temp[--pos];
-                    String desc = temp[--pos];
-
-                    StringBuilder brand = new StringBuilder();
-                    for (int i = 0; i < pos; i++) {
-                        brand.append(temp[i]);
-                        if (i < pos - 1) {
-                            brand.append(" ");
-                        }
-                    }
-
-                    String brandKey = brand.toString();
-                    Integer order = brandService.getOrder(brandKey);
+                    Record record = RecordLineHandler.parseLine(line);
+                    Integer order = brandService.getOrder(record.getBrandName());
                     if (order == null) {
                         return null;
                     }
 
-                    String record = date +
+                    String content = record.getDate() +
                             "," +
                             order +
                             "," +
-                            amount +
+                            record.getAmount() +
                             "\n";
                     int index = order % fileSize;
-                    return new Pair<>(index, record);
+                    return new Pair<>(index, content);
                 });
 
         brandService.clear();

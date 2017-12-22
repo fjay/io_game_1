@@ -1,15 +1,16 @@
 package org.io.competition.stat;
 
-import org.io.competition.stat.game.BrandService;
-import org.io.competition.stat.game.three.Task3NewService;
-import org.io.competition.stat.game.two.Record2Service;
-import org.io.competition.stat.game.two.Task2Service;
-import org.io.competition.stat.util.Stopwatch;
 import com.xiaoleilu.hutool.io.FileUtil;
 import com.xiaoleilu.hutool.io.IoUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.util.CharsetUtil;
 import com.xiaoleilu.hutool.util.StrUtil;
+import org.io.competition.stat.game.BrandService;
+import org.io.competition.stat.game.one.Task1NewService;
+import org.io.competition.stat.game.three.Task3NewService;
+import org.io.competition.stat.game.two.Record2Service;
+import org.io.competition.stat.game.two.Task2Service;
+import org.io.competition.stat.util.Stopwatch;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -29,6 +30,12 @@ public class TaskServiceTest {
     public void split2() {
         System.out.println(record2Service.split(TestUtil.RECORD_FILE_PATH, 10000, 30));
     }
+
+    @Test
+    public void run1() throws Exception {
+        run(new Task1NewService(brandService));
+    }
+
 
     @Test
     public void run2() throws Exception {
