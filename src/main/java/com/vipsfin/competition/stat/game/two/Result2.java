@@ -3,6 +3,9 @@ package com.vipsfin.competition.stat.game.two;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+/**
+ * @author Jay Wu
+ */
 public class Result2 {
     private Integer order = 0;
     private BigDecimal amount = new BigDecimal(0);

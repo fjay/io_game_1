@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * @author Jay Wu
+ */
 public class Util {
 
     private final static Log log = LogFactory.get();

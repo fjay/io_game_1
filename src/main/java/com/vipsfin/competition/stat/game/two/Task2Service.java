@@ -19,7 +19,7 @@ public class Task2Service implements TaskService {
     private final Log log = LogFactory.get();
 
     private BrandService brandService;
-    private Record2Service recordService;
+    protected Record2Service recordService;
 
     private AppConfig appConfig;
 

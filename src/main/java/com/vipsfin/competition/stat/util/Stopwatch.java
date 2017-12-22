@@ -1,5 +1,8 @@
 package com.vipsfin.competition.stat.util;
 
+/**
+ * @author Jay Wu
+ */
 public class Stopwatch {
 
     private long start;

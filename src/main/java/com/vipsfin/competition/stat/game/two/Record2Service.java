@@ -4,17 +4,18 @@ import com.vipsfin.competition.stat.game.BrandService;
 import com.vipsfin.competition.stat.util.Stopwatch;
 import com.vipsfin.competition.stat.util.Util;
 import com.xiaoleilu.hutool.io.FileUtil;
-import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
 import org.team4u.kit.core.lang.Pair;
 
 import java.io.File;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * @author Jay Wu
+ */
 public class Record2Service {
     private final Log log = LogFactory.get();
 
@@ -30,41 +31,25 @@ public class Record2Service {
         Stopwatch stopwatch = Stopwatch.create().start();
         AtomicLong counter = new AtomicLong();
         BoundedPriorityQueue<Result2> queue = newQueue();
-        File file = FileUtil.file(path);
 
-        FileUtil.readUtf8Lines(file, new LineHandler() {
-            private Map<Integer, Set<String>> recordDateMap = new HashMap<>();
-            private Map<Integer, BigDecimal> recordAmountMap = new HashMap<>();
-
-            @Override
-            public void handle(String line) {
-                counter.incrementAndGet();
-
-                String[] temp = line.split(",");
-                String date = temp[0];
-                Integer brandOrder = Integer.valueOf(temp[1]);
-                Integer amount = Integer.valueOf(temp[2]);
-
-                Set<String> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashSet<>());
-                uniqueDates.add(date);
-
-                BigDecimal totalAmount = recordAmountMap.computeIfAbsent(brandOrder, k -> BigDecimal.ZERO);
-                totalAmount = totalAmount.add(new BigDecimal(amount));
-                recordAmountMap.put(brandOrder, totalAmount);
-
-                Result2 result = new Result2()
-                        .setOrder(brandOrder)
-                        .setAmount(totalAmount)
-                        .setCount(uniqueDates.size());
-
-                queue.remove(result);
-                queue.offer(result);
-            }
-        });
+        FileUtil.readUtf8Lines(FileUtil.file(path), newRecordLineHandler(counter, queue));
 
         stopwatch.stop();
         log.info("Loaded {} size:{}, duration:{}", path, counter.get(), stopwatch.duration());
         return queue;
+    }
+
+    protected RecordLineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
+        return new RecordLineHandler(counter, queue) {
+            private Map<Integer, Set<String>> recordDateMap = new HashMap<>();
+
+            @Override
+            protected int count(Integer brandOrder, String date) {
+                Set<String> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashSet<>());
+                uniqueDates.add(date);
+                return uniqueDates.size();
+            }
+        };
     }
 
     public List<File> split(String path, int writerBufferLength, int fileSize) {

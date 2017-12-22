@@ -5,6 +5,9 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+/**
+ * @author Jay Wu
+ */
 public class BrandServiceTest {
 
     private BrandService brandService = new BrandService();

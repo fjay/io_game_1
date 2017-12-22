@@ -2,7 +2,7 @@ package com.vipsfin.competition.stat;
 
 import com.vipsfin.competition.stat.game.BrandService;
 import com.vipsfin.competition.stat.game.one.Task1Service;
-import com.vipsfin.competition.stat.game.three.Task3Service;
+import com.vipsfin.competition.stat.game.three.Task3NewService;
 import com.vipsfin.competition.stat.game.two.Task2Service;
 import com.xiaoleilu.hutool.collection.CollUtil;
 import com.xiaoleilu.hutool.lang.Dict;
@@ -44,6 +44,6 @@ public class StartController implements InitializingBean {
     public void afterPropertiesSet() {
         taskServiceMap.put(1, new Task1Service(brandService));
         taskServiceMap.put(2, new Task2Service(appConfig, brandService));
-        taskServiceMap.put(3, new Task3Service(brandService));
+        taskServiceMap.put(3, new Task3NewService(appConfig, brandService));
     }
 }

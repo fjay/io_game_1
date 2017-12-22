@@ -1,8 +1,10 @@
 package com.vipsfin.competition.stat;
 
 import com.vipsfin.competition.stat.game.BrandService;
+import com.vipsfin.competition.stat.game.three.Task3NewService;
 import com.vipsfin.competition.stat.game.two.Record2Service;
 import com.vipsfin.competition.stat.game.two.Task2Service;
+import com.vipsfin.competition.stat.util.Stopwatch;
 import com.xiaoleilu.hutool.io.FileUtil;
 import com.xiaoleilu.hutool.io.IoUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
@@ -15,32 +17,45 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 
-public class RecordServiceTest {
+/**
+ * @author Jay Wu
+ */
+public class TaskServiceTest {
 
     private BrandService brandService = new BrandService();
-    private Record2Service recordService = new Record2Service(brandService);
+    private Record2Service record2Service = new Record2Service(brandService);
 
     @Test
-    public void split() {
-        System.out.println(recordService.split(TestUtil.RECORD_FILE_PATH, 10000, 30));
+    public void split2() {
+        System.out.println(record2Service.split(TestUtil.RECORD_FILE_PATH, 10000, 30));
     }
 
     @Test
-    public void run() throws Exception {
+    public void run2() throws Exception {
+        run(new Task2Service(new AppConfig()
+                .setSplitFileCount(15)
+                .setWriterBufferLength(4000)
+                , brandService));
+    }
+
+    @Test
+    public void run3() throws Exception {
+        run(new Task3NewService(new AppConfig()
+                .setSplitFileCount(15)
+                .setWriterBufferLength(4000)
+                , brandService));
+    }
+
+    private void run(TaskService task2Service) throws Exception {
         brandService.load(TestUtil.BRAND_FILE_PATH);
 
-        long a = System.currentTimeMillis();
+        Stopwatch stopwatch = Stopwatch.create().start();
 
-        List<String> result = new Task2Service(
-                new AppConfig()
-                        .setSplitFileCount(1)
-                        .setWriterBufferLength(4000)
-                , brandService)
-                .run(TestUtil.RECORD_FILE_PATH + ".diff");
+        List<String> result = task2Service.run(TestUtil.RECORD_FILE_PATH);
         System.out.println(result);
 
-        long b = System.currentTimeMillis();
-        System.out.println(b - a);
+        stopwatch.stop();
+        System.out.println(stopwatch.duration());
     }
 
     @Test

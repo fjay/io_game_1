@@ -17,6 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * @author Jay Wu
+ */
 public class BrandService {
 
     private static final Log log = LogFactory.get();
