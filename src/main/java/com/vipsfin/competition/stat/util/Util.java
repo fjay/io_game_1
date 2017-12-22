@@ -89,26 +89,34 @@ public class Util {
             StringBuilder writerBuffer = writerBuffers.get(indexAndValue.getKey());
             writerBuffer.append(indexAndValue.getValue());
 
-            if (writerBuffer.length() > writerBufferLength) {
-                try {
-                    writers.get(indexAndValue.getKey()).append(writerBuffer.toString());
-                } catch (IOException e) {
-                    log.error(e, e.getMessage());
-                }
-                writerBuffer.delete(0, writerBuffer.length());
-            }
+            append(writers, writerBuffers, indexAndValue.getKey(), writerBufferLength);
 
             if (counter.incrementAndGet() % 1000000 == 0) {
                 log.info("Splitting {}, size: {}", filePath, counter.get());
             }
         });
 
-        for (Writer writer : writers) {
-            IoUtil.close(writer);
+        for (int i = 0; i < writers.size(); i++) {
+            append(writers, writerBuffers, i, 0);
+            IoUtil.close(writers.get(i));
         }
 
         stopwatch.stop();
         log.info("Split {}, size: {}, duration:{}", filePath, counter.get(), stopwatch.duration());
         return files;
+    }
+
+    public static void append(List<Writer> writers, List<StringBuilder> writerBuffers, int index, int maxBufferLength) {
+        StringBuilder writerBuffer = writerBuffers.get(index);
+
+        if (writerBuffer.length() >= maxBufferLength) {
+            try {
+                writers.get(index).append(writerBuffer.toString());
+            } catch (IOException e) {
+                log.error(e, e.getMessage());
+            }
+
+            writerBuffer.delete(0, writerBuffer.length());
+        }
     }
 }

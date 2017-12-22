@@ -26,7 +26,7 @@ public class RecordServiceTest {
         List<String> result = new Task2Service(
                 new AppConfig()
                         .setSplitFileCount(30)
-                        .setWriterBufferLength(50000)
+                        .setWriterBufferLength(5000)
                 , brandService)
                 .run(TestUtil.RECORD_FILE_PATH);
         System.out.println(result);
