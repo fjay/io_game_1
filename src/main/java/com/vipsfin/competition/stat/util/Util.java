@@ -56,29 +56,46 @@ public class Util {
         return result.length() == 0 ? "0" : result.toString();
     }
 
-    public static List<File> split(String filePath, String targetPath, int fileSize,
+    public static List<File> split(String filePath,
+                                   String targetPath,
+                                   int writerBufferLength,
+                                   int fileSize,
                                    Func<String, Pair<Integer, String>> data) {
-        List<File> files = new ArrayList<>();
-        Writer[] writers = new Writer[fileSize];
-        File file = FileUtil.file(filePath);
+        Stopwatch stopwatch = Stopwatch.create().start();
 
-        for (int i = 0; i < writers.length; i++) {
+        List<File> files = new ArrayList<>();
+        List<Writer> writers = new ArrayList<>();
+        File file = FileUtil.file(filePath);
+        List<StringBuilder> writerBuffers = new ArrayList<>();
+
+        for (int i = 0; i < fileSize; i++) {
             File targetFile = new File(targetPath + File.separator + i + "." + FileUtil.extName(file));
-            writers[i] = FileUtil.getWriter(targetFile, CharsetUtil.UTF_8, true);
             files.add(targetFile);
+
+            Writer writer = FileUtil.getWriter(targetFile.getAbsolutePath(), CharsetUtil.UTF_8, true);
+            writers.add(writer);
+
+            StringBuilder writerBuilder = new StringBuilder();
+            writerBuffers.add(writerBuilder);
         }
 
         AtomicLong counter = new AtomicLong();
-        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
+        FileUtil.readUtf8Lines(file, (LineHandler) (String line) -> {
             Pair<Integer, String> indexAndValue = data.call(line);
             if (indexAndValue == null) {
                 return;
             }
 
-            try {
-                writers[indexAndValue.getKey()].append(indexAndValue.getValue());
-            } catch (IOException e) {
-                log.error(e, e.getMessage());
+            StringBuilder writerBuffer = writerBuffers.get(indexAndValue.getKey());
+            writerBuffer.append(indexAndValue.getValue());
+
+            if (writerBuffer.length() > writerBufferLength) {
+                try {
+                    writers.get(indexAndValue.getKey()).append(writerBuffer.toString());
+                } catch (IOException e) {
+                    log.error(e, e.getMessage());
+                }
+                writerBuffer.delete(0, writerBuffer.length());
             }
 
             if (counter.incrementAndGet() % 1000000 == 0) {
@@ -90,6 +107,8 @@ public class Util {
             IoUtil.close(writer);
         }
 
+        stopwatch.stop();
+        log.info("Split {}, size: {}, duration:{}", filePath, counter.get(), stopwatch.duration());
         return files;
     }
 }

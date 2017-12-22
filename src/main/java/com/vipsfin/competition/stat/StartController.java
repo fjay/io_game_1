@@ -5,6 +5,7 @@ import com.vipsfin.competition.stat.game.three.Task3Service;
 import com.vipsfin.competition.stat.game.two.Task2Service;
 import com.xiaoleilu.hutool.collection.CollUtil;
 import com.xiaoleilu.hutool.lang.Dict;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,18 +19,14 @@ import java.util.Map;
  * @author Jay Wu
  */
 @RestController
-public class StartController {
+public class StartController implements InitializingBean {
 
     private BrandService brandService = new BrandService();
 
     @Autowired
     private AppConfig appConfig;
 
-    private Map<Integer, TaskService> taskServiceMap = new HashMap<Integer, TaskService>() {{
-        put(1, null);
-        put(2, new Task2Service(brandService));
-        put(3, new Task3Service(brandService));
-    }};
+    private Map<Integer, TaskService> taskServiceMap = new HashMap<>();
 
     @RequestMapping(value = "/loadBrand")
     public void loadBrand() throws IOException {
@@ -38,7 +35,14 @@ public class StartController {
 
     @RequestMapping(value = "/match")
     public Map<String, Object> start(String sign, String dataDisk, Integer dataCheckequence) throws Exception {
-        List<String> result = taskServiceMap.get(dataCheckequence).run(dataDisk, appConfig.getSplitFileCount());
+        List<String> result = taskServiceMap.get(dataCheckequence).run(dataDisk);
         return Dict.create().set("sign", sign).set("taskResult", CollUtil.join(result, ","));
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        taskServiceMap.put(1, null);
+        taskServiceMap.put(2, new Task2Service(appConfig, brandService));
+        taskServiceMap.put(3, new Task3Service(brandService));
     }
 }

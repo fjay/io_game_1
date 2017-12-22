@@ -16,7 +16,7 @@ public class Task3Service implements TaskService {
     }
 
     @Override
-    public List<String> run(String recordPath, int splitFileCount) throws Exception {
+    public List<String> run(String recordPath) throws Exception {
 //        //split file
         String line = null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(recordPath)));
@@ -140,7 +140,7 @@ public class Task3Service implements TaskService {
         int i = 39;
         while (!queue.isEmpty()) {
             Object[] l = queue.poll();
-            lists.add( l[0].toString());
+            lists.add(l[0].toString());
             Collections.reverse(lists);
         }
         return lists;

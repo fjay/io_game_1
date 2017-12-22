@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface TaskService {
 
-    List<String> run(String recordPath, int splitFileCount) throws Exception;
+    List<String> run(String recordPath) throws Exception;
 }

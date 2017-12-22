@@ -7,6 +7,7 @@ public class AppConfig {
 
     private String branchPath;
     private Integer splitFileCount = 30;
+    private Integer writerBufferLength = 50000;
 
     public String getBranchPath() {
         return branchPath;
@@ -23,6 +24,15 @@ public class AppConfig {
 
     public AppConfig setSplitFileCount(Integer splitFileCount) {
         this.splitFileCount = splitFileCount;
+        return this;
+    }
+
+    public Integer getWriterBufferLength() {
+        return writerBufferLength;
+    }
+
+    public AppConfig setWriterBufferLength(Integer writerBufferLength) {
+        this.writerBufferLength = writerBufferLength;
         return this;
     }
 }
