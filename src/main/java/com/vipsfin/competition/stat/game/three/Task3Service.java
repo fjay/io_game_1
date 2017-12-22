@@ -77,7 +77,7 @@ public class Task3Service implements TaskService {
         IOComparator comp = new IOComparator(count);
         BoundedPriorityQueue<Object[]> queue = new BoundedPriorityQueue<Object[]>(40, comp);
         Object[] mixTimes = null;
-        for (int i = 0; i < 26; i++) {
+        for (int i = 0; i < 10; i++) {
             //计算出现次数的
             Map<String, Integer> map = new HashMap<String, Integer>();
             BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream("e:/project/io/temp3/" + i + ".txt")));
