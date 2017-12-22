@@ -56,40 +56,69 @@ public class Util {
         return result.length() == 0 ? "0" : result.toString();
     }
 
-    public static List<File> split(String filePath, String targetPath, int fileSize,
+    public static List<File> split(String filePath,
+                                   String targetPath,
+                                   int writerBufferLength,
+                                   int fileSize,
                                    Func<String, Pair<Integer, String>> data) {
+        Stopwatch stopwatch = Stopwatch.create().start();
+
         List<File> files = new ArrayList<>();
-        Writer[] writers = new Writer[fileSize];
+        List<Writer> writers = new ArrayList<>();
         File file = FileUtil.file(filePath);
 
-        for (int i = 0; i < writers.length; i++) {
+        List<StringBuilder> writerBuffers = new ArrayList<>();
+
+        for (int i = 0; i < fileSize; i++) {
             File targetFile = new File(targetPath + File.separator + i + "." + FileUtil.extName(file));
-            writers[i] = FileUtil.getWriter(targetFile, CharsetUtil.UTF_8, true);
+            FileUtil.del(targetFile);
             files.add(targetFile);
+
+            Writer writer = FileUtil.getWriter(targetFile.getAbsolutePath(), CharsetUtil.UTF_8, true);
+            writers.add(writer);
+
+            StringBuilder writerBuilder = new StringBuilder();
+            writerBuffers.add(writerBuilder);
         }
 
         AtomicLong counter = new AtomicLong();
-        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
+        FileUtil.readUtf8Lines(file, (LineHandler) (String line) -> {
             Pair<Integer, String> indexAndValue = data.call(line);
             if (indexAndValue == null) {
                 return;
             }
 
-            try {
-                writers[indexAndValue.getKey()].append(indexAndValue.getValue());
-            } catch (IOException e) {
-                log.error(e, e.getMessage());
-            }
+            StringBuilder writerBuffer = writerBuffers.get(indexAndValue.getKey());
+            writerBuffer.append(indexAndValue.getValue());
+
+            append(writers, writerBuffers, indexAndValue.getKey(), writerBufferLength);
 
             if (counter.incrementAndGet() % 1000000 == 0) {
                 log.info("Splitting {}, size: {}", filePath, counter.get());
             }
         });
 
-        for (Writer writer : writers) {
-            IoUtil.close(writer);
+        for (int i = 0; i < writers.size(); i++) {
+            append(writers, writerBuffers, i, 0);
+            IoUtil.close(writers.get(i));
         }
 
+        stopwatch.stop();
+        log.info("Split {}, size: {}, duration:{}", filePath, counter.get(), stopwatch.duration());
         return files;
+    }
+
+    public static void append(List<Writer> writers, List<StringBuilder> writerBuffers, int index, int maxBufferLength) {
+        StringBuilder writerBuffer = writerBuffers.get(index);
+
+        if (writerBuffer.length() >= maxBufferLength) {
+            try {
+                writers.get(index).append(writerBuffer.toString());
+            } catch (IOException e) {
+                log.error(e, e.getMessage());
+            }
+
+            writerBuffer.delete(0, writerBuffer.length());
+        }
     }
 }

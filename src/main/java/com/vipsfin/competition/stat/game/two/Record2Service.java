@@ -67,51 +67,48 @@ public class Record2Service {
         return queue;
     }
 
-    public List<File> split(String path, int fileSize) {
-        Stopwatch stopwatch = Stopwatch.create().start();
-
+    public List<File> split(String path, int writerBufferLength, int fileSize) {
         File file = FileUtil.file(path);
         String basePath = file.getParentFile().getAbsolutePath() + "/r";
         log.info("Loading {}", path);
 
-        List<File> files = Util.split(path, basePath, fileSize, parameters -> {
-            String line = parameters[0];
+        List<File> files = Util.split(path, basePath, writerBufferLength, fileSize,
+                parameters -> {
+                    String line = parameters[0];
 
-            String[] temp = line.split(" ");
-            int pos = temp.length;
-            String date = temp[--pos];
-            Integer amount = Integer.valueOf(temp[--pos]);
-            String location = temp[--pos];
-            String desc = temp[--pos];
+                    String[] temp = line.split(" ");
+                    int pos = temp.length;
+                    String date = temp[--pos];
+                    Integer amount = Integer.valueOf(temp[--pos]);
+                    String location = temp[--pos];
+                    String desc = temp[--pos];
 
-            StringBuilder brand = new StringBuilder();
-            for (int i = 0; i < pos; i++) {
-                brand.append(temp[i]);
-                if (i < pos - 1) {
-                    brand.append(" ");
-                }
-            }
+                    StringBuilder brand = new StringBuilder();
+                    for (int i = 0; i < pos; i++) {
+                        brand.append(temp[i]);
+                        if (i < pos - 1) {
+                            brand.append(" ");
+                        }
+                    }
 
-            String brandKey = brand.toString();
-            Integer order = brandService.getOrder(brandKey);
-            if (order == null) {
-                return null;
-            }
+                    String brandKey = brand.toString();
+                    Integer order = brandService.getOrder(brandKey);
+                    if (order == null) {
+                        return null;
+                    }
 
-            String record = date.replace("-", "") +
-                    "," +
-                    order +
-                    "," +
-                    amount +
-                    "\n";
-            int index = order % fileSize;
-            return new Pair<>(index, record);
-        });
+                    String record = date.replace("-", "") +
+                            "," +
+                            order +
+                            "," +
+                            amount +
+                            "\n";
+                    int index = order % fileSize;
+                    return new Pair<>(index, record);
+                });
 
         brandService.clear();
 
-        stopwatch.stop();
-        log.info("Loaded {} duration:{}", path, stopwatch.duration());
         return files;
     }
 

@@ -14,7 +14,7 @@ public class RecordServiceTest {
 
     @Test
     public void split() {
-        System.out.println(recordService.split(TestUtil.RECORD_FILE_PATH, 30));
+        System.out.println(recordService.split(TestUtil.RECORD_FILE_PATH, 10000, 30));
     }
 
     @Test
@@ -23,7 +23,12 @@ public class RecordServiceTest {
 
         long a = System.currentTimeMillis();
 
-        List<String> result = new Task2Service(brandService).run(TestUtil.RECORD_FILE_PATH, 30);
+        List<String> result = new Task2Service(
+                new AppConfig()
+                        .setSplitFileCount(30)
+                        .setWriterBufferLength(5000)
+                , brandService)
+                .run(TestUtil.RECORD_FILE_PATH);
         System.out.println(result);
 
         long b = System.currentTimeMillis();

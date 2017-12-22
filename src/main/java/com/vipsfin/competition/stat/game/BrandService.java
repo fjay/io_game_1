@@ -1,25 +1,22 @@
 package com.vipsfin.competition.stat.game;
 
+import com.vipsfin.competition.stat.util.Stopwatch;
 import com.vipsfin.competition.stat.util.Util;
 import com.xiaoleilu.hutool.io.FileUtil;
 import com.xiaoleilu.hutool.io.IoUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
-import javafx.util.Pair;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
-import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Service
 public class BrandService {
 
     private static final Log log = LogFactory.get();
@@ -30,19 +27,10 @@ public class BrandService {
 
     private int size;
 
-    public List<File> split(String path, int fileSize) {
-        File file = FileUtil.file(path);
-        String basePath = file.getParentFile().getAbsolutePath() + "/n";
-        AtomicInteger orderCounter = new AtomicInteger();
-
-        return Util.split(path, basePath, fileSize, parameters -> {
-            String line = parameters[0];
-            int index = Math.abs(line.hashCode()) % fileSize;
-            return new Pair<>(index, orderCounter.incrementAndGet() + "," + line + "\n");
-        });
-    }
-
     public void load(String path) throws IOException {
+        log.info("Loading {}", path);
+        Stopwatch stopwatch = Stopwatch.create().start();
+
         File file = FileUtil.file(path);
         String basePath = file.getParentFile().getAbsolutePath();
 
@@ -75,8 +63,9 @@ public class BrandService {
         });
 
         size = counter.get();
-        log.info("Loaded {}, total:{}, level1:{}",
-                path, size, nameOrderLevel1Cache.size(), nameOrderLevel2Cache.size());
+        stopwatch.stop();
+        log.info("Loaded {}, total:{}, level1:{} duration:{}",
+                path, size, nameOrderLevel1Cache.size(), nameOrderLevel2Cache.size(), stopwatch.duration());
 
         counter.set(0);
         FileUtil.readUtf8Lines(file, (LineHandler) line -> {
@@ -91,8 +80,9 @@ public class BrandService {
             }
         });
 
-        log.info("Loaded {}, total:{}, level1:{}, level2:{}",
-                path, size, nameOrderLevel1Cache.size(), nameOrderLevel2Cache.size());
+        stopwatch.stop();
+        log.info("Loaded {}, total:{}, level1:{}, level2:{}, duration:{}",
+                path, size, nameOrderLevel1Cache.size(), nameOrderLevel2Cache.size(), stopwatch.duration());
     }
 
     public Integer getOrder(String brand) {

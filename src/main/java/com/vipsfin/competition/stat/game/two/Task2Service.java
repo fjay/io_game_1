@@ -1,5 +1,6 @@
 package com.vipsfin.competition.stat.game.two;
 
+import com.vipsfin.competition.stat.AppConfig;
 import com.vipsfin.competition.stat.TaskService;
 import com.vipsfin.competition.stat.game.BrandService;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
@@ -20,13 +21,20 @@ public class Task2Service implements TaskService {
     private BrandService brandService;
     private Record2Service recordService;
 
-    public Task2Service(BrandService brandService) {
+    private AppConfig appConfig;
+
+    public Task2Service(AppConfig appConfig, BrandService brandService) {
+        this.appConfig = appConfig;
         this.brandService = brandService;
         this.recordService = new Record2Service(brandService);
     }
 
-    public List<String> run(String recordPath, int splitFileCount) {
-        List<File> files = recordService.split(recordPath, splitFileCount);
+    public List<String> run(String recordPath) {
+        List<File> files = recordService.split(
+                recordPath,
+                appConfig.getWriterBufferLength(),
+                appConfig.getSplitFileCount()
+        );
 
         BoundedPriorityQueue<Result2> resultQueue = recordService.newQueue();
 
