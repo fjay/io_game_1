@@ -1,4 +1,4 @@
-package com.vipsfin.competition.stat;
+package com.vipsfin.competition.stat.util;
 
 public class Stopwatch {
 
@@ -9,8 +9,9 @@ public class Stopwatch {
         return new Stopwatch();
     }
 
-    public void start() {
+    public Stopwatch start() {
         start = System.currentTimeMillis();
+        return this;
     }
 
     public void stop() {

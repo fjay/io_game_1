@@ -1,4 +1,4 @@
-package com.vipsfin.competition.stat;
+package com.vipsfin.competition.stat.util;
 
 import java.util.HashMap;
 import java.util.Map;

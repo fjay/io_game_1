@@ -1,4 +1,4 @@
-package com.vipsfin.competition.stat;
+package com.vipsfin.competition.stat.game.two;
 
 import java.math.BigDecimal;
 import java.util.Objects;

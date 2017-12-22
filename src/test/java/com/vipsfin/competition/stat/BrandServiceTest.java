@@ -1,5 +1,6 @@
 package com.vipsfin.competition.stat;
 
+import com.vipsfin.competition.stat.game.BrandService;
 import org.junit.Test;
 
 import java.io.IOException;

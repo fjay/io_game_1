@@ -1,5 +1,8 @@
-package com.vipsfin.competition.stat;
+package com.vipsfin.competition.stat.game.two;
 
+import com.vipsfin.competition.stat.game.BrandService;
+import com.vipsfin.competition.stat.util.Stopwatch;
+import com.vipsfin.competition.stat.util.Util;
 import com.xiaoleilu.hutool.io.FileUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
@@ -14,17 +17,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class RecordService {
+public class Record2Service {
     private final Log log = LogFactory.get();
 
     private BrandService brandService;
 
-    public RecordService(BrandService brandService) {
+    public Record2Service(BrandService brandService) {
         this.brandService = brandService;
     }
 
     public BoundedPriorityQueue<Result2> sort(String path) {
-        final AtomicLong a = new AtomicLong(System.currentTimeMillis());
+        log.info("Loading {}", path);
+
+        Stopwatch stopwatch = Stopwatch.create().start();
         AtomicLong counter = new AtomicLong();
         BoundedPriorityQueue<Result2> queue = newQueue();
         File file = FileUtil.file(path);
@@ -35,11 +40,7 @@ public class RecordService {
 
             @Override
             public void handle(String line) {
-                if (counter.incrementAndGet() % 1000000 == 0) {
-                    long b = System.currentTimeMillis();
-                    log.info(file.getName() + ":" + (b - a.get()));
-                    a.set(b);
-                }
+                counter.incrementAndGet();
 
                 String[] temp = line.split(",");
                 Integer date = Integer.valueOf(temp[0]);
@@ -61,11 +62,14 @@ public class RecordService {
             }
         });
 
-        log.info("load {} size:{}", path, counter.get());
+        stopwatch.stop();
+        log.info("Loaded {} size:{}, duration:{}", path, counter.get(), stopwatch.duration());
         return queue;
     }
 
     public List<File> split(String path, int fileSize) {
+        Stopwatch stopwatch = Stopwatch.create().start();
+
         File file = FileUtil.file(path);
         String basePath = file.getParentFile().getAbsolutePath() + "/r";
         log.info("Loading {}", path);
@@ -106,6 +110,8 @@ public class RecordService {
 
         brandService.clear();
 
+        stopwatch.stop();
+        log.info("Loaded {} duration:{}", path, stopwatch.duration());
         return files;
     }
 

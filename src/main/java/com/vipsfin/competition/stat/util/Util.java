@@ -1,4 +1,4 @@
-package com.vipsfin.competition.stat;
+package com.vipsfin.competition.stat.util;
 
 import com.xiaoleilu.hutool.io.FileUtil;
 import com.xiaoleilu.hutool.io.IoUtil;
@@ -15,9 +15,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Util {
@@ -61,7 +58,6 @@ public class Util {
 
     public static List<File> split(String filePath, String targetPath, int fileSize,
                                    Func<String, Pair<Integer, String>> data) {
-        ThreadPoolExecutor pool = newBlockingFixedThreadPool(3);
         List<File> files = new ArrayList<>();
         Writer[] writers = new Writer[fileSize];
         File file = FileUtil.file(filePath);
@@ -74,39 +70,26 @@ public class Util {
 
         AtomicLong counter = new AtomicLong();
         FileUtil.readUtf8Lines(file, (LineHandler) line -> {
-            pool.execute(() -> {
-                Pair<Integer, String> indexAndValue = data.call(line);
-                if (indexAndValue == null) {
-                    return;
-                }
+            Pair<Integer, String> indexAndValue = data.call(line);
+            if (indexAndValue == null) {
+                return;
+            }
 
-                try {
-                    writers[indexAndValue.getKey()].append(indexAndValue.getValue());
-                } catch (IOException e) {
-                    log.error(e, e.getMessage());
-                }
+            try {
+                writers[indexAndValue.getKey()].append(indexAndValue.getValue());
+            } catch (IOException e) {
+                log.error(e, e.getMessage());
+            }
 
-                if (counter.incrementAndGet() % 1000000 == 0) {
-                    log.info("Splitting {}, size: {}", filePath, counter.get());
-                }
-            });
+            if (counter.incrementAndGet() % 1000000 == 0) {
+                log.info("Splitting {}, size: {}", filePath, counter.get());
+            }
         });
-
-        pool.shutdown();
-        try {
-            pool.awaitTermination(1, TimeUnit.HOURS);
-        } catch (InterruptedException e) {
-            log.error(e, e.getMessage());
-        }
 
         for (Writer writer : writers) {
             IoUtil.close(writer);
         }
 
         return files;
-    }
-
-    public static ThreadPoolExecutor newBlockingFixedThreadPool(int maxThreads) {
-        return new ThreadPoolExecutor(0, maxThreads, 0L, TimeUnit.MILLISECONDS, new SynchronousQueue(), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 }

@@ -1,5 +1,8 @@
 package com.vipsfin.competition.stat;
 
+import com.vipsfin.competition.stat.game.BrandService;
+import com.vipsfin.competition.stat.game.two.Record2Service;
+import com.vipsfin.competition.stat.game.two.Task2Service;
 import org.junit.Test;
 
 import java.util.List;
@@ -7,11 +10,11 @@ import java.util.List;
 public class RecordServiceTest {
 
     private BrandService brandService = new BrandService();
-    private RecordService recordService = new RecordService(brandService);
+    private Record2Service recordService = new Record2Service(brandService);
 
     @Test
     public void split() {
-        System.out.println(recordService.split(TestUtil.RECORD_FILE_PATH, 100));
+        System.out.println(recordService.split(TestUtil.RECORD_FILE_PATH, 30));
     }
 
     @Test
@@ -20,7 +23,7 @@ public class RecordServiceTest {
 
         long a = System.currentTimeMillis();
 
-        List<String> result = new TaskService(brandService).run(TestUtil.RECORD_FILE_PATH, 100);
+        List<String> result = new Task2Service(brandService).run(TestUtil.RECORD_FILE_PATH, 30);
         System.out.println(result);
 
         long b = System.currentTimeMillis();

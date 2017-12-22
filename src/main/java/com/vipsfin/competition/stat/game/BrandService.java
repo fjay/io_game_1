@@ -1,5 +1,6 @@
-package com.vipsfin.competition.stat;
+package com.vipsfin.competition.stat.game;
 
+import com.vipsfin.competition.stat.util.Util;
 import com.xiaoleilu.hutool.io.FileUtil;
 import com.xiaoleilu.hutool.io.IoUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
@@ -9,6 +10,7 @@ import javafx.util.Pair;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Service
 public class BrandService {
 
     private static final Log log = LogFactory.get();
