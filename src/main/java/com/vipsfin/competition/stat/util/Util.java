@@ -66,10 +66,12 @@ public class Util {
         List<File> files = new ArrayList<>();
         List<Writer> writers = new ArrayList<>();
         File file = FileUtil.file(filePath);
+
         List<StringBuilder> writerBuffers = new ArrayList<>();
 
         for (int i = 0; i < fileSize; i++) {
             File targetFile = new File(targetPath + File.separator + i + "." + FileUtil.extName(file));
+            FileUtil.del(targetFile);
             files.add(targetFile);
 
             Writer writer = FileUtil.getWriter(targetFile.getAbsolutePath(), CharsetUtil.UTF_8, true);
