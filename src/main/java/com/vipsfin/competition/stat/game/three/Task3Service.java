@@ -26,7 +26,7 @@ public class Task3Service implements TaskService {
 
 
         for (int i = 0; i < writers.length; i++) {
-            writers[i] = new BufferedWriter(new FileWriter("e:/project/io/temp3/" + i + ".txt"));
+            writers[i] = new BufferedWriter(new FileWriter("./temp3/" + i + ".txt"));
             sbs[i] = new StringBuilder(2048);
         }
 
@@ -75,7 +75,7 @@ public class Task3Service implements TaskService {
         for (int i = 0; i < 26; i++) {
             //计算出现次数的
             Map<String, Integer> map = new HashMap<String, Integer>();
-            BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream("e:/project/io/temp3/" + i + ".txt")));
+            BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream("./temp3/" + i + ".txt")));
             while ((line = r.readLine()) != null) {
                 if ("".equals(line)) {
                     continue;
