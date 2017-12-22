@@ -4,6 +4,7 @@ import com.vipsfin.competition.stat.game.BrandService;
 import com.vipsfin.competition.stat.game.two.Record2Service;
 import com.vipsfin.competition.stat.game.two.Task2Service;
 import com.xiaoleilu.hutool.io.FileUtil;
+import com.xiaoleilu.hutool.io.IoUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.util.CharsetUtil;
 import com.xiaoleilu.hutool.util.StrUtil;
@@ -46,7 +47,7 @@ public class RecordServiceTest {
     public void filter() {
         String expectString = "vswjNkkSW vHWvgtZoTV,vMejbIwwYifxvqKNt,lyzrjA cZLZzfvBNtR,pgSbPJHRORjFAtzo,SVfZdBEdnmdrmfvRBBdrH,clUIzPBNgrOxCRHVbznLd G,SzVcJbGLjEK YkChspvf,GpNSPPZfFtdD iHDPIv,Pn VSTW ghJF vdb,kqFIIzcJhWaracR,VMDEP LhQfhiGbEOtU,Vhl LITrcuXnwEsZ,tR aiiQJUwrajakQo,IWQZiagEYQPHGoDjXTFYN,gQJppdvaLkwRv cmeDLdBcK,amgxv tQgBukrMaHrsPhM,DRHKdpeBIRBBGHoaFtN,FBEFiFPTQNKCMqXW,SWbDz voGxwWMdqK,MSHqnnsfjhGOHKHO,OketIl kxVEwEfpDAZ,eExCJUBJcEpZlMgfkJUFlU,YBEJhfZoAfjSuge,PIKYUvEpqiqRvWZBuwiu,sd RCo HkJAq zpEkYn uj,KZ xIHIFNPXihIF,PWtQKNGGiccYuguAetc,MJXdfBaZTFPtGiAjPZXl,CSqllBGdbyG rCrA,wwPjrXhSepOkEU hIbGMJUO,wUynN M SsfrJZE,DUTvROjSgRTjzmLsazzroQ,bVDSOZtdmlbdzfpgg,ZRgYkXfaLBedgkdrhTEoep,lXTIBgJCVWRjVf SPmWTK,PRfsZN mIFGKTYdFu,SyjTiHtXgqoGXiaxVw,xEtJnIvjKcMFlxSRQJ,sLmhnqteljawmLXEUbt,DaFZGyYsVTSqhoglL";
 
-        String myString = "";
+        String myString = "vswjNkkSW vHWvgtZoTV,vMejbIwwYifxvqKNt,SVfZdBEdnmdrmfvRBBdrH,pgSbPJHRORjFAtzo,clUIzPBNgrOxCRHVbznLd G,lyzrjA cZLZzfvBNtR,SzVcJbGLjEK YkChspvf,GpNSPPZfFtdD iHDPIv,MSHqnnsfjhGOHKHO,Vhl LITrcuXnwEsZ,kqFIIzcJhWaracR,tR aiiQJUwrajakQo,Pn VSTW ghJF vdb,FBEFiFPTQNKCMqXW,DRHKdpeBIRBBGHoaFtN,SyjTiHtXgqoGXiaxVw,QlDmCJFsjKyAFjR,IWQZiagEYQPHGoDjXTFYN,CxZjLQzbzMzejBxOCl pj,eExCJUBJcEpZlMgfkJUFlU,VMDEP LhQfhiGbEOtU,CSqllBGdbyG rCrA,uzxdVvsSzfyriXrdIHOPgKy,sLmhnqteljawmLXEUbt,MJXdfBaZTFPtGiAjPZXl,gQJppdvaLkwRv cmeDLdBcK,SWbDz voGxwWMdqK,UPfuVL HRQZsz oHKkz,SemjiPKQAbrJOMHiRmebF b,ZRgYkXfaLBedgkdrhTEoep,PWtQKNGGiccYuguAetc,KZ xIHIFNPXihIF,xEtJnIvjKcMFlxSRQJ,wUynN M SsfrJZE,sd RCo HkJAq zpEkYn uj,GEtVnhmzIuxdAQY,iBnXkpzahXdDxWZjM,lBMiXMR swVyCNi OnX,s qUc FfdYa FISASvZw c,fhCzgbIRYtpSnhzvwn";
 
         HashSet<String> x = new HashSet<String>();
         x.addAll(StrUtil.splitTrim(expectString, ","));
@@ -72,11 +73,13 @@ public class RecordServiceTest {
             String brandKey = brand.toString();
             if (x.contains(brandKey)) {
                 try {
-                    w.append(line);
+                    w.append(line).append("\n");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
+
+        IoUtil.close(w);
     }
 }

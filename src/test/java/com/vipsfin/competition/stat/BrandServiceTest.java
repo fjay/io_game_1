@@ -13,7 +13,7 @@ public class BrandServiceTest {
     public void load() throws IOException {
         try {
             brandService.load(TestUtil.BRAND_FILE_PATH);
-            System.out.println(brandService.getOrder("A/E"));
+            System.out.println(brandService.getSize());
         } finally {
             brandService.close();
         }
