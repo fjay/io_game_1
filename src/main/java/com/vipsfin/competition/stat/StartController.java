@@ -1,6 +1,7 @@
 package com.vipsfin.competition.stat;
 
 import com.vipsfin.competition.stat.game.BrandService;
+import com.vipsfin.competition.stat.game.three.Task3Service;
 import com.vipsfin.competition.stat.game.two.Task2Service;
 import com.xiaoleilu.hutool.collection.CollUtil;
 import com.xiaoleilu.hutool.lang.Dict;
@@ -27,7 +28,7 @@ public class StartController {
     private Map<Integer, TaskService> taskServiceMap = new HashMap<Integer, TaskService>() {{
         put(1, null);
         put(2, new Task2Service(brandService));
-        put(3, null);
+        put(3, new Task3Service(brandService));
     }};
 
     @RequestMapping(value = "/loadBrand")
@@ -35,7 +36,7 @@ public class StartController {
         brandService.load(appConfig.getBranchPath());
     }
 
-    @RequestMapping(value = "/start")
+    @RequestMapping(value = "/match")
     public Map<String, Object> start(String sign, String dataDisk, Integer dataCheckequence) throws Exception {
         List<String> result = taskServiceMap.get(dataCheckequence).run(dataDisk, appConfig.getSplitFileCount());
         return Dict.create().set("sign", sign).set("taskResult", CollUtil.join(result, ","));
