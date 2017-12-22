@@ -30,7 +30,7 @@ public class StartController implements InitializingBean {
 
     @RequestMapping(value = "/loadBrand")
     public void loadBrand() throws IOException {
-        brandService.load(appConfig.getBranchPath());
+        brandService.load(appConfig.getBrandPath());
     }
 
     @RequestMapping(value = "/match")

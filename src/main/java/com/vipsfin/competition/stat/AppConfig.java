@@ -5,16 +5,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app")
 public class AppConfig {
 
-    private String branchPath;
+    private String brandPath;
     private Integer splitFileCount = 30;
     private Integer writerBufferLength = 50000;
 
-    public String getBranchPath() {
-        return branchPath;
+    public String getBrandPath() {
+        return brandPath;
     }
 
-    public AppConfig setBranchPath(String branchPath) {
-        this.branchPath = branchPath;
+    public AppConfig setBrandPath(String brandPath) {
+        this.brandPath = brandPath;
         return this;
     }
 
