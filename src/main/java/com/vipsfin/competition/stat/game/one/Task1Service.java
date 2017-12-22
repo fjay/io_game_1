@@ -22,7 +22,7 @@ public class Task1Service implements TaskService{
         long time = System.currentTimeMillis();
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(recordPath)));
         String line = null;
-        Map<String,Long> map = new HashMap<String, Long>();
+        Map<Integer,Long> map = new HashMap<Integer, Long>();
         StringBuilder sa = new StringBuilder(8);
         while((line = reader.readLine()) != null){
             String[] arr = line.split("\\s");
@@ -48,41 +48,49 @@ public class Task1Service implements TaskService{
                 sb.append(arr[i]);
             }
             String brandName = sb.toString();
+            Integer id = brandService.getOrder(brandName);
+            if(id == null){
+                continue;
+            }
             if(c.equals("VIP_NH")){
                 if(date >= 20110101 && date <= 20161231){
-                    if(map.containsKey(brandName)){
-                        map.put(brandName, map.get(brandName) + num);
+                    if(map.containsKey(id)){
+                        map.put(id, map.get(id) + num);
                     } else {
-                        map.put(brandName, num);
+                        map.put(id, num);
                     }
                 }
             }
         }
-
-        BoundedPriorityQueue<String> queue = new BoundedPriorityQueue<String>(40, new comp(map));
+        brandService.clear();
+        BoundedPriorityQueue<Integer> queue = new BoundedPriorityQueue<Integer>(40, new comp(map));
         for(Map.Entry entry : map.entrySet()){
-            queue.offer(entry.getKey().toString());
+            queue.offer((Integer) entry.getKey());
         }
 
         List<String> list = new ArrayList<String>(40);
         while(!queue.isEmpty()){
-            list.add(queue.poll());
+            list.add(brandService.getName((Integer)queue.poll()));
         }
         Collections.reverse(list);
         return list;
     }
 
-    public class comp implements Comparator<String> {
+    public class comp implements Comparator<Integer> {
 
-        private Map<String, Long> count;
+        private Map<Integer, Long> count;
 
-        public comp(Map<String, Long> count){
+        public comp(Map<Integer, Long> count){
             this.count = count;
         }
 
         @Override
-        public int compare(String o1, String o2) {
-            return count.get(o1) - count.get(o2) > 0 ? -1 : 1;
+        public int compare(Integer o1, Integer o2) {
+            long result = count.get(o1) - count.get(o2);
+            if(result == 0){
+                return o1 > o2 ? -1 : 1 ;
+            }
+            return  result > 0 ? -1 : 1;
         }
     }
 

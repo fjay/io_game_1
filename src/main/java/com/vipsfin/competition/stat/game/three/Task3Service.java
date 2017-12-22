@@ -21,20 +21,18 @@ public class Task3Service implements TaskService {
         String line = null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(recordPath)));
 
-        Writer[] writers = new Writer[26];
-        StringBuilder[] sbs = new StringBuilder[26];
+        Writer[] writers = new Writer[10];
+        StringBuilder[] sbs = new StringBuilder[10];
 
 
         for (int i = 0; i < writers.length; i++) {
-            writers[i] = new BufferedWriter(new FileWriter("./temp3/" + i + ".txt"));
-            sbs[i] = new StringBuilder(2048);
+            writers[i] = new BufferedWriter(new FileWriter("e:/project/io/temp3/" + i + ".txt"));
+            sbs[i] = new StringBuilder(4096);
         }
 
 
         while ((line = reader.readLine()) != null) {
             String[] arr = line.split("\\s");
-            String date = arr[arr.length - 1];
-            String num = arr[arr.length - 2];
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < arr.length - 4; i++) {
                 if (i > 0) {
@@ -43,21 +41,27 @@ public class Task3Service implements TaskService {
                 sb.append(arr[i]);
             }
             String brandName = sb.toString();
-            int index = brandName.substring(0, 1).toLowerCase().charAt(0) - 'a';
+            Integer i = this.service.getOrder(brandName);
+            if(i == null){
+                continue;
+            }
+            String date = arr[arr.length - 1];
+            String num = arr[arr.length - 2];
+            int index = i % 10;
             StringBuilder s = sbs[index];
-            s.append(brandName);
+            s.append(i);
             s.append("@");
             s.append(date);
             s.append(":");
             s.append(num);
             s.append("\n");
-            if (s.length() >= 2000) {
+            if (s.length() >= 4000) {
                 writers[index].write(s.toString());
                 s.delete(0, s.length());
             }
 
         }
-        for (int i = 0; i < 26; i++) {
+        for (int i = 0; i < 10; i++) {
             StringBuilder s = sbs[i];
             if (s.length() > 0) {
                 writers[i].write(s.toString());
@@ -67,6 +71,7 @@ public class Task3Service implements TaskService {
         }
         sbs = null;
         reader.close();
+        this.service.clear();
         //read file to calculate
         Map<String, List> count = new HashMap<String, List>();
         IOComparator comp = new IOComparator(count);
@@ -75,7 +80,7 @@ public class Task3Service implements TaskService {
         for (int i = 0; i < 26; i++) {
             //计算出现次数的
             Map<String, Integer> map = new HashMap<String, Integer>();
-            BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream("./temp3/" + i + ".txt")));
+            BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream("e:/project/io/temp3/" + i + ".txt")));
             while ((line = r.readLine()) != null) {
                 if ("".equals(line)) {
                     continue;
@@ -140,7 +145,7 @@ public class Task3Service implements TaskService {
         int i = 39;
         while (!queue.isEmpty()) {
             Object[] l = queue.poll();
-            lists.add(l[0].toString());
+            lists.add(service.getName(Integer.parseInt(l[0].toString())));
             Collections.reverse(lists);
         }
         return lists;
@@ -180,7 +185,7 @@ public class Task3Service implements TaskService {
                 }
                 Long result = result1 - result2;
                 if (result == 0l) {
-                    return -1 * (o1[0].toString().compareTo(o2[0].toString()));
+                    return -1 * Integer.parseInt(o1[0].toString()) - Integer.parseInt(o2[0].toString());
                 } else {
                     return result > 0 ? -1 : 1;
                 }
