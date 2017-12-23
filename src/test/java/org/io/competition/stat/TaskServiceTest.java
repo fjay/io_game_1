@@ -49,7 +49,7 @@ public class TaskServiceTest {
     public void run3() throws Exception {
         run(new Task3NewService(new AppConfig()
                 .setSplitFileCount(15)
-                .setWriterBufferLength(4000)
+                .setWriterBufferLength(2000)
                 , brandService));
     }
 
@@ -103,5 +103,13 @@ public class TaskServiceTest {
         });
 
         IoUtil.close(w);
+    }
+
+    @Test
+    public void x() {
+        String x = Integer.toString(20171010, 36);
+        System.out.println(x);
+        int y = Integer.valueOf(x, 36);
+        System.out.println(y);
     }
 }

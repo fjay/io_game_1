@@ -44,11 +44,11 @@ public class Record2Service {
 
     protected LineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
         return new SimpleRecordLineHandler(counter, queue) {
-            private Map<Integer, Set<String>> recordDateMap = new HashMap<>();
+            private Map<Integer, Set<Integer>> recordDateMap = new HashMap<>();
 
             @Override
-            protected int count(Integer brandOrder, String date) {
-                Set<String> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashSet<>());
+            protected int count(Integer brandOrder, Integer date) {
+                Set<Integer> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashSet<>());
                 uniqueDates.add(date);
                 return uniqueDates.size();
             }
@@ -70,11 +70,11 @@ public class Record2Service {
                         return null;
                     }
 
-                    String content = record.getDate() +
+                    String content = Integer.toString(Integer.valueOf(record.getDate()), Character.MAX_RADIX) +
                             "," +
-                            order +
+                            Integer.toString(order, Character.MAX_RADIX) +
                             "," +
-                            record.getAmount() +
+                            Integer.toString(record.getAmount(), Character.MAX_RADIX) +
                             "\n";
                     int index = order % fileSize;
                     return new Pair<>(index, content);

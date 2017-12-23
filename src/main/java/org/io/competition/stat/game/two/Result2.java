@@ -16,4 +16,9 @@ public class Result2 extends Result1 {
         this.count = count;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return getOrder() + "|" + count + "|" + getAmount();
+    }
 }

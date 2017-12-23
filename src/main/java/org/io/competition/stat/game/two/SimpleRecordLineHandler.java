@@ -27,9 +27,9 @@ public abstract class SimpleRecordLineHandler implements LineHandler {
         counter.incrementAndGet();
 
         String[] temp = line.split(",");
-        String date = temp[0];
-        Integer brandOrder = Integer.valueOf(temp[1]);
-        Integer amount = Integer.valueOf(temp[2]);
+        Integer date = Integer.valueOf(temp[0], Character.MAX_RADIX);
+        Integer brandOrder = Integer.valueOf(temp[1], Character.MAX_RADIX);
+        Integer amount = Integer.valueOf(temp[2], Character.MAX_RADIX);
 
         BigDecimal totalAmount = recordAmountMap.computeIfAbsent(brandOrder, k -> BigDecimal.ZERO);
         totalAmount = totalAmount.add(new BigDecimal(amount));
@@ -44,5 +44,5 @@ public abstract class SimpleRecordLineHandler implements LineHandler {
         queue.offer(result);
     }
 
-    protected abstract int count(Integer brandOrder, String date);
+    protected abstract int count(Integer brandOrder, Integer date);
 }
