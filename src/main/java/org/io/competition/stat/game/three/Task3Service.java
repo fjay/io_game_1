@@ -1,10 +1,12 @@
 package org.io.competition.stat.game.three;
 
+import com.xiaoleilu.hutool.lang.Filter;
 import org.io.competition.stat.TaskService;
 import org.io.competition.stat.game.BrandService;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.util.*;
 
 public class Task3Service implements TaskService {
@@ -18,16 +20,16 @@ public class Task3Service implements TaskService {
     @Override
     public List<String> run(String recordPath) throws Exception {
 //        //split file
+        long begin = System.currentTimeMillis();
         String line = null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(recordPath)));
 
-        Writer[] writers = new Writer[10];
-        StringBuilder[] sbs = new StringBuilder[10];
+        DataOutputStream[] writers = new DataOutputStream[10];
+        //StringBuilder[] sbs = new StringBuilder[10];
 
 
         for (int i = 0; i < writers.length; i++) {
-            writers[i] = new BufferedWriter(new FileWriter("e:/project/io/temp3/" + i + ".txt"));
-            sbs[i] = new StringBuilder(4096);
+            writers[i] = new DataOutputStream(new BufferedOutputStream(new FileOutputStream("/home/roger/io/temp3/" + i + ".txt")));
         }
 
 
@@ -45,95 +47,86 @@ public class Task3Service implements TaskService {
             if(i == null){
                 continue;
             }
-            String date = arr[arr.length - 1];
-            String num = arr[arr.length - 2];
+            sb.delete(0, sb.length());
             int index = i % 10;
-            StringBuilder s = sbs[index];
-            s.append(i);
-            s.append("@");
-            s.append(date);
-            s.append(":");
-            s.append(num);
-            s.append("\n");
-            if (s.length() >= 4000) {
-                writers[index].write(s.toString());
-                s.delete(0, s.length());
+            DataOutputStream dos = writers[index];
+            String dateStr = arr[arr.length - 1];
+            String[] datearr = dateStr.split("-");
+            sb.append(datearr[0]);
+            if(datearr.length == 1){
+                sb.append("0");
             }
-
+            sb.append(datearr[1]);
+            if(datearr.length == 2){
+                sb.append("0");
+            }
+            sb.append(datearr[2]);
+            Integer date = Integer.parseInt(sb.toString());
+            Long num = Long.parseLong(arr[arr.length - 2]);
+            dos.writeInt(i);
+            dos.writeInt(date);
+            dos.writeLong(num);
         }
         for (int i = 0; i < 10; i++) {
-            StringBuilder s = sbs[i];
-            if (s.length() > 0) {
-                writers[i].write(s.toString());
-            }
             writers[i].flush();
             writers[i].close();
         }
-        sbs = null;
         reader.close();
         this.service.clear();
+        System.out.println(System.currentTimeMillis() - begin);
         //read file to calculate
-        Map<String, List> count = new HashMap<String, List>();
+        Map<Integer, BigDecimal> count = new HashMap<Integer, BigDecimal>();
         IOComparator comp = new IOComparator(count);
-        BoundedPriorityQueue<Object[]> queue = new BoundedPriorityQueue<Object[]>(40, comp);
-        Object[] mixTimes = null;
+        BoundedPriorityQueue<Integer[]> queue = new BoundedPriorityQueue<Integer[]>(40, comp);
         for (int i = 0; i < 10; i++) {
             //计算出现次数的
-            Map<String, Integer> map = new HashMap<String, Integer>();
-            BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream("e:/project/io/temp3/" + i + ".txt")));
-            while ((line = r.readLine()) != null) {
+            Map<Integer, Map<Integer,Integer>> map = new HashMap<Integer, Map<Integer,Integer>>();
+            DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream("/home/roger/io/temp3/" + i + ".txt")));
+            while (dis.available() > 0) {
                 if ("".equals(line)) {
                     continue;
                 }
-                String[] arr = line.split(":");
-                String brandName = arr[0].split("@")[0];
-                if (map.containsKey(arr[0])) {
-                    map.put(arr[0], map.get(arr[0]) + 1);
-                } else {
-                    map.put(arr[0], 1);
-                }
-                List list = count.get(brandName);
-                if (list != null) {
-                    list.add(arr[1]);
-                } else {
-                    List l = new ArrayList(1);
-                    l.add(arr[1]);
-                    count.put(brandName, l);
-                }
-            }
-            r.close();
-            Map<String, Integer> filter = new HashMap<>();
-            for (Map.Entry<String, Integer> entry : map.entrySet()) {
-                String brandName = entry.getKey().split("@")[0];
-                if (filter.get(brandName) != null) {
-                    if (filter.get(brandName) < entry.getValue()) {
-                        filter.put(brandName, entry.getValue());
+                int brandName = dis.readInt();
+                int date = dis.readInt();
+                long num = dis.readLong();
+                Map<Integer, Integer> m = map.computeIfAbsent(brandName, c -> {
+                    return new HashMap<Integer, Integer>();
+                });
+                m.compute(date, (k,v)->{
+                    if(v == null){
+                        return 1;
+                    } else {
+                        return v + 1;
                     }
-                } else {
-                    filter.put(brandName, entry.getValue());
-                }
+                });
+                count.compute(brandName,(k,v)->{
+                   if(v == null){
+                       return new BigDecimal(num);
+                   } else {
+                       return v.add(new BigDecimal(num));
+                   }
+                });
+            }
+            dis.close();
+            Map<Integer, Integer> filter = new HashMap<>();
+            for (Map.Entry<Integer, Map<Integer,Integer>> entry : map.entrySet()) {
+                Integer max = entry.getValue().entrySet().stream().max(new Comparator<Map.Entry<Integer, Integer>>() {
+                    @Override
+                    public int compare(Map.Entry<Integer, Integer> o1, Map.Entry<Integer, Integer> o2) {
+                        return o1.getValue().compareTo(o2.getValue());
+                    }
+                }).get().getValue();
+                filter.put(entry.getKey(),max);
             }
 
-            for (Map.Entry<String, Integer> entry : filter.entrySet()) {
-                if (queue.size() < 40) {
-                    queue.offer(new Object[]{entry.getKey(), entry.getValue()});
-                    mixTimes = queue.peek();
+            for (Map.Entry<Integer, Integer> entry : filter.entrySet()) {
+                if(queue.size() < 40){
+                    queue.offer(new Integer[]{entry.getKey(), entry.getValue()});
                 } else {
-                    if (entry.getValue() > (Integer) mixTimes[1]) {
-                        Object[] o = queue.poll();
-                        queue.offer(new Object[]{entry.getKey(), entry.getValue()});
-                        count.remove(o[0]);
-                        mixTimes = queue.peek();
-                    } else if (entry.getValue() == (Integer) mixTimes[1]) {
-                        Object[] a = new Object[]{entry.getKey(), entry.getValue()};
-                        if (comp.compare(a, mixTimes) < 0) {
-                            Object[] t = queue.poll();
-                            count.remove(t[0]);
-                            queue.offer(a);
-                            mixTimes = queue.peek();
-                        } else {
-                            count.remove(entry.getKey());
-                        }
+                    Integer[] last = queue.peek();
+                    queue.offer(new Integer[]{entry.getKey(), entry.getValue()});
+                    if(queue.peek()[0] == last[0]){
+                        count.remove(last[0]);
                     } else {
                         count.remove(entry.getKey());
                     }
@@ -142,55 +135,36 @@ public class Task3Service implements TaskService {
         }
 
         List<String> lists = new ArrayList<>(40);
-        int i = 39;
         while (!queue.isEmpty()) {
-            Object[] l = queue.poll();
-            lists.add(service.getName(Integer.parseInt(l[0].toString())));
+            lists.add(service.getName(queue.poll()[0]));
             Collections.reverse(lists);
         }
+        System.out.println(System.currentTimeMillis() - begin);
         return lists;
     }
 
-    private class IOComparator implements Comparator<Object[]> {
 
-        private Map<String, List> count;
+    private class IOComparator implements Comparator<Integer[]> {
 
-        public IOComparator(Map<String, List> count) {
+        private Map<Integer, BigDecimal> count;
+
+        public IOComparator(Map<Integer, BigDecimal> count) {
             this.count = count;
         }
 
 
         @Override
-        public int compare(Object[] o1, Object[] o2) {
-            if ((Integer) o1[1] == (Integer) o2[1]) {
-                List list1 = count.get(o1[0]);
-                List list2 = count.get(o2[0]);
-                Long result1 = 0l;
-                Long result2 = 0l;
-                for (int i = 0; i < Math.max(list1.size(), list2.size()); i++) {
-                    if (i < list1.size()) {
-                        result1 += Long.parseLong(list1.get(i).toString());
-                    }
-                    if (i < list2.size()) {
-                        result2 += Long.parseLong(list2.get(i).toString());
-                    }
-                }
-                if (list1.size() > 1) {
-                    list1.clear();
-                    list1.add(result1);
-                }
-                if (list2.size() > 1) {
-                    list2.clear();
-                    list2.add(result2);
-                }
-                Long result = result1 - result2;
-                if (result == 0l) {
-                    return -1 * Integer.parseInt(o1[0].toString()) - Integer.parseInt(o2[0].toString());
+        public int compare(Integer[] o1, Integer[] o2) {
+            if (o1[1] == o2[1]) {
+                BigDecimal a = count.get(o1[0]);
+                BigDecimal b = count.get(o2[0]);
+                if (a.equals(b)) {
+                    return Integer.parseInt(o1[0].toString()) - Integer.parseInt(o2[0].toString());
                 } else {
-                    return result > 0 ? -1 : 1;
+                    return a.compareTo(b) > 0 ? -1 : 1;
                 }
             } else {
-                return -1 * ((Integer) o1[1] - (Integer) o2[1]);
+                return o2[1] - o1[1];
             }
         }
     }

@@ -28,6 +28,7 @@ public class Record2Service {
         this.brandService = brandService;
     }
 
+
     public BoundedPriorityQueue<Result2> sort(String path) {
         log.info("Loading {}", path);
 

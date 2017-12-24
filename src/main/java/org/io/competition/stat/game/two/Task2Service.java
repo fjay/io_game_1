@@ -10,6 +10,7 @@ import com.xiaoleilu.hutool.log.LogFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * @author Jay Wu
@@ -18,6 +19,7 @@ public class Task2Service implements TaskService {
 
     private final Log log = LogFactory.get();
 
+    private ExecutorService es = Executors.newFixedThreadPool(2);
     private BrandService brandService;
     protected Record2Service recordService;
 
@@ -35,16 +37,27 @@ public class Task2Service implements TaskService {
                 appConfig.getWriterBufferLength(),
                 appConfig.getSplitFileCount()
         );
-
         BoundedPriorityQueue<Result2> resultQueue = recordService.newQueue();
-
+        //尝试并行处理
+        List<Future<BoundedPriorityQueue<Result2>>> list = new ArrayList<>();
         for (File recordFile : files) {
-            BoundedPriorityQueue<Result2> tempQueue = recordService.sort(recordFile.getAbsolutePath());
-
-            for (Result2 result2 : tempQueue.toList()) {
-                resultQueue.offer(result2);
+            Future<BoundedPriorityQueue<Result2>> future = this.es.submit(new RecordSortTask(recordService, recordFile));
+            list.add(future);
+        }
+        for (Future<BoundedPriorityQueue<Result2>> f : list){
+            BoundedPriorityQueue<Result2> tempQueue = null;
+            try {
+                tempQueue = f.get();
+                for (Result2 result2 : tempQueue.toList()) {
+                    resultQueue.offer(result2);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
             }
         }
+
 
         ArrayList<Result2> result2s = resultQueue.toList();
         log.info(result2s.toString());
