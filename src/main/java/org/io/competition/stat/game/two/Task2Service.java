@@ -1,16 +1,18 @@
 package org.io.competition.stat.game.two;
 
-import org.io.competition.stat.AppConfig;
-import org.io.competition.stat.TaskService;
-import org.io.competition.stat.game.BrandService;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
+import org.io.competition.stat.AppConfig;
+import org.io.competition.stat.TaskService;
+import org.io.competition.stat.game.BrandService;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * @author Jay Wu
@@ -38,23 +40,23 @@ public class Task2Service implements TaskService {
                 appConfig.getSplitFileCount()
         );
         BoundedPriorityQueue<Result2> resultQueue = recordService.newQueue();
-        //尝试并行处理
+
+        // 尝试并行处理
         List<Future<BoundedPriorityQueue<Result2>>> list = new ArrayList<>();
         for (File recordFile : files) {
             Future<BoundedPriorityQueue<Result2>> future = this.es.submit(new RecordSortTask(recordService, recordFile));
             list.add(future);
         }
-        for (Future<BoundedPriorityQueue<Result2>> f : list){
+
+        for (Future<BoundedPriorityQueue<Result2>> f : list) {
             BoundedPriorityQueue<Result2> tempQueue = null;
             try {
                 tempQueue = f.get();
                 for (Result2 result2 : tempQueue.toList()) {
                     resultQueue.offer(result2);
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                log.error(e, e.getMessage());
             }
         }
 

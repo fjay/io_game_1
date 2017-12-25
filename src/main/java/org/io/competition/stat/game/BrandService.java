@@ -1,12 +1,12 @@
 package org.io.competition.stat.game;
 
-import org.io.competition.stat.util.Stopwatch;
-import org.io.competition.stat.util.Util;
 import com.xiaoleilu.hutool.io.FileUtil;
 import com.xiaoleilu.hutool.io.IoUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
+import org.io.competition.stat.util.Stopwatch;
+import org.io.competition.stat.util.Util;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
@@ -41,10 +41,12 @@ public class BrandService {
         File orderNameCacheFile = new File(basePath + "/o");
         boolean isCacheFileExists = orderNameCacheFile.exists();
 
-        Options options = new Options();
-        options.createIfMissing(true);
+        if (orderNameCache == null) {
+            Options options = new Options();
+            options.createIfMissing(true);
 
-        orderNameCache = Iq80DBFactory.factory.open(orderNameCacheFile, options);
+            orderNameCache = Iq80DBFactory.factory.open(orderNameCacheFile, options);
+        }
 
         AtomicInteger counter = new AtomicInteger(0);
         FileUtil.readUtf8Lines(file, (LineHandler) line -> {

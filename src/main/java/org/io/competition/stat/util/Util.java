@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -23,9 +22,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Util {
 
     private final static Log log = LogFactory.get();
-
-    private final static char[] array = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    private final static String numStr = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     //byte 数组与 int 的相互转换
     public static int byteArrayToInt(byte[] b) {
@@ -42,21 +38,6 @@ public class Util {
                 (byte) ((a >> 8) & 0xFF),
                 (byte) (a & 0xFF)
         };
-    }
-
-    //10进制转为其他进制，除留取余，逆序排列
-    public static String tenToN(long number, int N) {
-        Long rest = number;
-        Stack<Character> stack = new Stack<Character>();
-        StringBuilder result = new StringBuilder(0);
-        while (rest != 0) {
-            stack.add(array[new Long((rest % N)).intValue()]);
-            rest = rest / N;
-        }
-        for (; !stack.isEmpty(); ) {
-            result.append(stack.pop());
-        }
-        return result.length() == 0 ? "0" : result.toString();
     }
 
     public static List<File> split(String filePath,
