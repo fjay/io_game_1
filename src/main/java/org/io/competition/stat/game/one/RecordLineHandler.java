@@ -4,6 +4,7 @@ import com.xiaoleilu.hutool.io.LineHandler;
 import org.io.competition.stat.game.BrandService;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,23 +24,56 @@ public class RecordLineHandler implements LineHandler {
         this.counter = counter;
     }
 
+    public static void main(String[] args) {
+        String line = "bjjXzeYDNeMDOOWJ PrOiCyVxjMfxlrygDg VIP_HZ 374291948 2015-2-2";
+        int i = 0;
+        ArrayList<Integer> temp = new ArrayList<>(10);
+        for(int j = 0 ; j < line.length() ; j++){
+            if(line.charAt(j) == ' '){
+                i++;
+                temp.add(j);
+            }
+        }
+        System.out.println(line.substring(temp.get(temp.size() - 1) + 1));
+        System.out.println(line.substring(temp.get(temp.size() - 1) + 1).length());
+        System.out.println(line.substring(temp.get(temp.size() - 2) + 1, temp.get(temp.size() -1)));
+        System.out.println(line.substring(temp.get(temp.size() - 2) + 1, temp.get(temp.size() -1)).length());
+        System.out.println(line.substring(temp.get(temp.size() - 3) + 1, temp.get(temp.size() -2)));
+        System.out.println(line.substring(temp.get(temp.size() - 3) + 1, temp.get(temp.size() -2)).length());
+        System.out.println(line.substring(0, temp.get(temp.size() -4)));
+    }
+
     @Override
     public void handle(String line) {
         counter.incrementAndGet();
+        int pos = line.lastIndexOf(' ');
+        int i = 0;
+        ArrayList<Integer> temp = new ArrayList<>(10);
+        for(int j = 0 ; j < line.length() ; j++){
+            if(line.charAt(j) == ' '){
+                i++;
+                temp.add(j);
+            }
+        }
 
-        String[] temp = line.split(" ");
-        if (!temp[temp.length - 3].equals("VIP_NH")) {
+
+        if (!line.substring(temp.get(temp.size() - 3) + 1, temp.get(temp.size() -2)).equals("VIP_NH")) {
             return;
         }
 
-        String[] dateTemp = temp[temp.length - 1].split("-");
         StringBuilder dateBuilder = new StringBuilder(8);
-        dateBuilder.append(dateTemp[0]);
-        for (int i = 1; i < dateTemp.length; i++) {
-            if (dateTemp[i].length() == 1) {
-                dateBuilder.append("0");
+        String dateStr = line.substring(temp.get(temp.size() - 1) + 1);
+        for(int k = 0 ; k < dateStr.length() ; k++){
+            char a = dateStr.charAt(k);
+            if(a != '-'){
+                dateBuilder.append(a);
+            } else {
+                if(k==4 && dateStr.charAt(6) == '-'){
+                    dateBuilder.append('0');
+                } else if (k + 2 == dateStr.length()){
+                    dateBuilder.append('0');
+                }
             }
-            dateBuilder.append(dateTemp[i]);
         }
 
         int date = Integer.valueOf(dateBuilder.toString());
@@ -47,21 +81,13 @@ public class RecordLineHandler implements LineHandler {
             return;
         }
 
-        StringBuilder brandBuilder = new StringBuilder();
-        for (int i = 0; i < temp.length - 4; i++) {
-            if (i != 0) {
-                brandBuilder.append(" ");
-            }
-            brandBuilder.append(temp[i]);
-        }
 
-        Integer brandOrder = brandService.getOrder(brandBuilder.toString());
+        Integer brandOrder = brandService.getOrder(line.substring(0, temp.get(temp.size() -4)));
         if (brandOrder == null) {
             return;
         }
 
-        BigDecimal amount = new BigDecimal(Integer.valueOf(temp[temp.length - 2]));
-
+        BigDecimal amount = new BigDecimal(Integer.valueOf(line.substring(temp.get(temp.size() - 2) + 1, temp.get(temp.size() -1))));
         BigDecimal totalAmount = recordAmountMap.computeIfAbsent(brandOrder, k -> BigDecimal.ZERO);
         totalAmount = totalAmount.add(amount);
         recordAmountMap.put(brandOrder, totalAmount);
