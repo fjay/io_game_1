@@ -24,10 +24,11 @@ public abstract class SimpleRecordLineHandler implements LineHandler {
     public void handle(String line) {
         counter.incrementAndGet();
 
-        String[] temp = line.split(",");
-        String date = temp[0];
-        Integer brandOrder = Integer.valueOf(temp[1]);
-        Integer amount = Integer.valueOf(temp[2]);
+        int pos = line.indexOf(',');
+        int pos2 = line.indexOf('@');
+        String date = line.substring(0, pos);
+        Integer brandOrder = Integer.valueOf(line.substring(pos + 1, pos2));
+        Integer amount = Integer.valueOf(line.substring(pos2 + 1));
 
         Result2 result = new Result2()
                 .setCount(count(brandOrder, date));

@@ -71,28 +71,26 @@ public class Record2Service {
 
         List<File> files = Util.split(path, basePath, writerBufferLength, fileSize,
                 parameters -> {
-                    String[] temp = parameters[0].split(" ");
-
-                    StringBuilder brandBuilder = new StringBuilder();
-                    for (int i = 0; i < temp.length - 4; i++) {
-                        if (i != 0) {
-                            brandBuilder.append(" ");
+                    String line = parameters[0];
+                    ArrayList<Integer> temp = new ArrayList<>(10);
+                    for(int j = 0 ; j < line.length() ; j++){
+                        if(line.charAt(j) == ' '){
+                            temp.add(j);
                         }
-                        brandBuilder.append(temp[i]);
                     }
 
-                    Integer order = brandService.getOrder(brandBuilder.toString());
+                    Integer order = brandService.getOrder(line.substring(0, temp.get(temp.size() -4)));
                     if (order == null) {
                         return null;
                     }
 
-                    String date = temp[temp.length - 1];
-                    Integer amount = Integer.valueOf(temp[temp.length - 2]);
+                    String date = line.substring(temp.get(temp.size() - 1) + 1);
+                    Integer amount = Integer.valueOf(line.substring(temp.get(temp.size() - 2) + 1, temp.get(temp.size() -1)));
 
                     String content = date +
                             "," +
                             order +
-                            "," +
+                            "@" +
                             amount +
                             "\n";
                     int index = order % fileSize;
