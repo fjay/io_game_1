@@ -13,6 +13,7 @@ import org.team4u.kit.core.lang.Pair;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 /**
  * @author Jay Wu
@@ -44,12 +45,21 @@ public class Record2Service {
     protected LineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
         return new SimpleRecordLineHandler(counter, queue) {
             private Map<Integer, Set<String>> recordDateMap = new HashMap<>();
+            private DefaultDateValue defaultDateValue = new DefaultDateValue();
 
             @Override
             protected int count(Integer brandOrder, String date) {
-                Set<String> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashSet<>());
+                Set<String> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, defaultDateValue);
                 uniqueDates.add(date);
                 return uniqueDates.size();
+            }
+
+            class DefaultDateValue implements Function<Integer, Set<String>> {
+
+                @Override
+                public Set<String> apply(Integer integer) {
+                    return new HashSet<>();
+                }
             }
         };
     }
@@ -81,9 +91,9 @@ public class Record2Service {
 
                     String content = date +
                             "," +
-                            Integer.toString(order, Character.MAX_RADIX) +
+                            order +
                             "," +
-                            Integer.toString(amount, Character.MAX_RADIX) +
+                            amount +
                             "\n";
                     int index = order % fileSize;
                     return new Pair<>(index, content);
