@@ -1,13 +1,14 @@
 package org.io.competition.stat.game.one;
 
 import com.xiaoleilu.hutool.io.FileUtil;
-import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
 import org.io.competition.stat.game.BrandService;
 import org.io.competition.stat.util.Stopwatch;
 
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -22,32 +23,37 @@ public class Record1Service {
         this.brandService = brandService;
     }
 
-    public BoundedPriorityQueue<Result1> sort(String path) {
+    public BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> sort(String path) {
         log.info("Loading {}", path);
 
         Stopwatch stopwatch = Stopwatch.create().start();
         AtomicLong counter = new AtomicLong();
-        BoundedPriorityQueue<Result1> queue = newQueue();
+        BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> queue = newQueue();
 
-        FileUtil.readUtf8Lines(FileUtil.file(path), newRecordLineHandler(counter, queue));
+        RecordLineHandler lineHandler = newRecordLineHandler(counter);
+        FileUtil.readUtf8Lines(FileUtil.file(path), lineHandler);
+
+        for (Map.Entry<Integer, BigDecimal> entry : lineHandler.getRecordAmountMap().entrySet()) {
+            queue.offer(entry);
+        }
 
         stopwatch.stop();
         log.info("Loaded {} size:{}, duration:{}", path, counter.get(), stopwatch.duration());
         return queue;
     }
 
-    protected LineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result1> queue) {
-        return new RecordLineHandler(brandService, counter, queue);
+    protected RecordLineHandler newRecordLineHandler(AtomicLong counter) {
+        return new RecordLineHandler(brandService, counter);
     }
 
-    public BoundedPriorityQueue<Result1> newQueue() {
+    public BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> newQueue() {
         return new BoundedPriorityQueue<>(
                 40,
                 (o1, o2) -> {
-                    int result = -o1.getAmount().compareTo(o2.getAmount());
+                    int result = -o1.getValue().compareTo(o2.getValue());
 
                     if (result == 0) {
-                        return o1.getOrder().compareTo(o2.getOrder());
+                        return o1.getKey().compareTo(o2.getKey());
                     }
 
                     return result;

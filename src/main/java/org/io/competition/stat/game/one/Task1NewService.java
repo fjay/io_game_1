@@ -4,8 +4,10 @@ import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import org.io.competition.stat.TaskService;
 import org.io.competition.stat.game.BrandService;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Jay Wu
@@ -22,10 +24,10 @@ public class Task1NewService implements TaskService {
 
     @Override
     public List<String> run(String recordPath) throws Exception {
-        BoundedPriorityQueue<Result1> result = record1Service.sort(recordPath);
+        BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> result = record1Service.sort(recordPath);
         List<String> brandNames = new ArrayList<>();
-        for (Result1 result1 : result) {
-            brandNames.add(brandService.getName(result1.getOrder()));
+        for (Map.Entry<Integer, BigDecimal> result1 : result) {
+            brandNames.add(brandService.getName(result1.getKey()));
         }
         return brandNames;
     }

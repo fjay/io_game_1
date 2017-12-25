@@ -1,7 +1,6 @@
 package org.io.competition.stat.game.one;
 
 import com.xiaoleilu.hutool.io.LineHandler;
-import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import org.io.competition.stat.game.BrandService;
 
 import java.math.BigDecimal;
@@ -14,16 +13,14 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RecordLineHandler implements LineHandler {
 
-    protected BoundedPriorityQueue<Result1> queue;
     protected AtomicLong counter;
     protected Map<Integer, BigDecimal> recordAmountMap = new HashMap<>();
 
     protected BrandService brandService;
 
-    public RecordLineHandler(BrandService brandService, AtomicLong counter, BoundedPriorityQueue<Result1> queue) {
+    public RecordLineHandler(BrandService brandService, AtomicLong counter) {
         this.brandService = brandService;
         this.counter = counter;
-        this.queue = queue;
     }
 
     @Override
@@ -68,11 +65,9 @@ public class RecordLineHandler implements LineHandler {
         BigDecimal totalAmount = recordAmountMap.computeIfAbsent(brandOrder, k -> BigDecimal.ZERO);
         totalAmount = totalAmount.add(amount);
         recordAmountMap.put(brandOrder, totalAmount);
+    }
 
-        Result1 result = new Result1()
-                .setOrder(brandOrder)
-                .setAmount(totalAmount);
-        queue.remove(result);
-        queue.offer(result);
+    public Map<Integer, BigDecimal> getRecordAmountMap() {
+        return recordAmountMap;
     }
 }
