@@ -58,6 +58,7 @@ public class BrandService {
     }
 
     public void clear() {
+        nameOrderCache.clear();
     }
 
     public void close() {
