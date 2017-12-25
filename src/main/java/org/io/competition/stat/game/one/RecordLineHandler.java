@@ -3,7 +3,6 @@ package org.io.competition.stat.game.one;
 import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import org.io.competition.stat.game.BrandService;
-import org.io.competition.stat.game.Record;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -27,10 +26,13 @@ public class RecordLineHandler implements LineHandler {
         this.queue = queue;
     }
 
-    public static Record parseLine(String line) {
+    @Override
+    public void handle(String line) {
+        counter.incrementAndGet();
+
         String[] temp = line.split(" ");
-        if(!temp[temp.length - 3].equals("VIP_NH")){
-            return null;
+        if (!temp[temp.length - 3].equals("VIP_NH")) {
+            return;
         }
 
         String[] dateTemp = temp[temp.length - 1].split("-");
@@ -45,38 +47,26 @@ public class RecordLineHandler implements LineHandler {
 
         int date = Integer.valueOf(dateBuilder.toString());
         if (date < 20110101 || date > 20161231) {
-            return null;
-        }
-
-        StringBuilder brand = new StringBuilder();
-        for (int i = 0; i < temp.length - 4; i++) {
-            if (i != 0) {
-                brand.append(" ");
-            }
-            brand.append(temp[i]);
-        }
-        Record record = new Record().setAmount(Integer.valueOf(temp[temp.length - 2])).setBrandName(brand.toString());
-        return record;
-    }
-
-    @Override
-    public void handle(String line) {
-        counter.incrementAndGet();
-
-        Record record = parseLine(line);
-
-        if(record == null){
             return;
         }
 
-        Integer brandOrder = brandService.getOrder(record.getBrandName());
+        StringBuilder brandBuilder = new StringBuilder();
+        for (int i = 0; i < temp.length - 4; i++) {
+            if (i != 0) {
+                brandBuilder.append(" ");
+            }
+            brandBuilder.append(temp[i]);
+        }
+
+        Integer brandOrder = brandService.getOrder(brandBuilder.toString());
         if (brandOrder == null) {
             return;
         }
 
+        BigDecimal amount = new BigDecimal(Integer.valueOf(temp[temp.length - 2]));
 
         BigDecimal totalAmount = recordAmountMap.computeIfAbsent(brandOrder, k -> BigDecimal.ZERO);
-        totalAmount = totalAmount.add(new BigDecimal(record.getAmount()));
+        totalAmount = totalAmount.add(amount);
         recordAmountMap.put(brandOrder, totalAmount);
 
         Result1 result = new Result1()

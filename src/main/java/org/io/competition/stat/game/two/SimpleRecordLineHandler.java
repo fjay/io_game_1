@@ -27,7 +27,7 @@ public abstract class SimpleRecordLineHandler implements LineHandler {
         counter.incrementAndGet();
 
         String[] temp = line.split(",");
-        Integer date = Integer.valueOf(temp[0], Character.MAX_RADIX);
+        String date = temp[0];
         Integer brandOrder = Integer.valueOf(temp[1], Character.MAX_RADIX);
         Integer amount = Integer.valueOf(temp[2], Character.MAX_RADIX);
 
@@ -44,5 +44,5 @@ public abstract class SimpleRecordLineHandler implements LineHandler {
         queue.offer(result);
     }
 
-    protected abstract int count(Integer brandOrder, Integer date);
+    protected abstract int count(Integer brandOrder, String date);
 }

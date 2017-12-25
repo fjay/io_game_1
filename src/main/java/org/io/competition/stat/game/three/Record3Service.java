@@ -22,12 +22,12 @@ public class Record3Service extends Record2Service {
     @Override
     protected SimpleRecordLineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
         return new SimpleRecordLineHandler(counter, queue) {
-            private final static int MAX_COUNT_KEY = 0;
-            private Map<Integer, Map<Integer, Integer>> recordDateMap = new HashMap<>();
+            private final static String MAX_COUNT_KEY = "";
+            private Map<Integer, Map<String, Integer>> recordDateMap = new HashMap<>();
 
             @Override
-            protected int count(Integer brandOrder, Integer date) {
-                Map<Integer, Integer> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashMap<>());
+            protected int count(Integer brandOrder, String date) {
+                Map<String, Integer> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashMap<>());
                 int count = uniqueDates.computeIfAbsent(date, k -> 0);
                 uniqueDates.put(date, ++count);
 

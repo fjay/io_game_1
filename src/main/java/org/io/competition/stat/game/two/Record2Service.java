@@ -6,7 +6,6 @@ import com.xiaoleilu.hutool.lang.BoundedPriorityQueue;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
 import org.io.competition.stat.game.BrandService;
-import org.io.competition.stat.game.Record;
 import org.io.competition.stat.util.Stopwatch;
 import org.io.competition.stat.util.Util;
 import org.team4u.kit.core.lang.Pair;
@@ -44,11 +43,11 @@ public class Record2Service {
 
     protected LineHandler newRecordLineHandler(AtomicLong counter, BoundedPriorityQueue<Result2> queue) {
         return new SimpleRecordLineHandler(counter, queue) {
-            private Map<Integer, Set<Integer>> recordDateMap = new HashMap<>();
+            private Map<Integer, Set<String>> recordDateMap = new HashMap<>();
 
             @Override
-            protected int count(Integer brandOrder, Integer date) {
-                Set<Integer> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashSet<>());
+            protected int count(Integer brandOrder, String date) {
+                Set<String> uniqueDates = recordDateMap.computeIfAbsent(brandOrder, k -> new HashSet<>());
                 uniqueDates.add(date);
                 return uniqueDates.size();
             }
@@ -62,19 +61,29 @@ public class Record2Service {
 
         List<File> files = Util.split(path, basePath, writerBufferLength, fileSize,
                 parameters -> {
-                    String line = parameters[0];
+                    String[] temp = parameters[0].split(" ");
 
-                    Record record = RecordLineHandler.parseLine(line);
-                    Integer order = brandService.getOrder(record.getBrandName());
+                    StringBuilder brandBuilder = new StringBuilder();
+                    for (int i = 0; i < temp.length - 4; i++) {
+                        if (i != 0) {
+                            brandBuilder.append(" ");
+                        }
+                        brandBuilder.append(temp[i]);
+                    }
+
+                    Integer order = brandService.getOrder(brandBuilder.toString());
                     if (order == null) {
                         return null;
                     }
 
-                    String content = Integer.toString(Integer.valueOf(record.getDate()), Character.MAX_RADIX) +
+                    String date = temp[temp.length - 1];
+                    Integer amount = Integer.valueOf(temp[temp.length - 2]);
+
+                    String content = date +
                             "," +
                             Integer.toString(order, Character.MAX_RADIX) +
                             "," +
-                            Integer.toString(record.getAmount(), Character.MAX_RADIX) +
+                            Integer.toString(amount, Character.MAX_RADIX) +
                             "\n";
                     int index = order % fileSize;
                     return new Pair<>(index, content);
