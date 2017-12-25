@@ -28,12 +28,12 @@ public class RecordLineHandler implements LineHandler {
     }
 
     public static Record parseLine(String line) {
-        Record record = new Record();
-
         String[] temp = line.split(" ");
-        int pos = temp.length;
+        if(!temp[temp.length - 3].equals("VIP_NH")){
+            return null;
+        }
 
-        String[] dateTemp = temp[--pos].split("-");
+        String[] dateTemp = temp[temp.length - 1].split("-");
         StringBuilder dateBuilder = new StringBuilder(8);
         dateBuilder.append(dateTemp[0]);
         for (int i = 1; i < dateTemp.length; i++) {
@@ -43,20 +43,19 @@ public class RecordLineHandler implements LineHandler {
             dateBuilder.append(dateTemp[i]);
         }
 
-        record.setDate(dateBuilder.toString())
-                .setAmount(Integer.valueOf(temp[--pos]))
-                .setLocation(temp[--pos]);
-        String desc = temp[--pos];
-
-        StringBuilder brand = new StringBuilder();
-        for (int i = 0; i < pos; i++) {
-            brand.append(temp[i]);
-            if (i < pos - 1) {
-                brand.append(" ");
-            }
+        int date = Integer.valueOf(dateBuilder.toString());
+        if (date < 20110101 || date > 20161231) {
+            return null;
         }
 
-        record.setBrandName(brand.toString());
+        StringBuilder brand = new StringBuilder();
+        for (int i = 0; i < temp.length - 4; i++) {
+            if (i != 0) {
+                brand.append(" ");
+            }
+            brand.append(temp[i]);
+        }
+        Record record = new Record().setAmount(Integer.valueOf(temp[temp.length - 2])).setBrandName(brand.toString());
         return record;
     }
 
@@ -66,19 +65,15 @@ public class RecordLineHandler implements LineHandler {
 
         Record record = parseLine(line);
 
+        if(record == null){
+            return;
+        }
+
         Integer brandOrder = brandService.getOrder(record.getBrandName());
         if (brandOrder == null) {
             return;
         }
 
-        if (!record.getLocation().equals("VIP_NH")) {
-            return;
-        }
-
-        int date = Integer.valueOf(record.getDate());
-        if (date < 20110101 || date > 20161231) {
-            return;
-        }
 
         BigDecimal totalAmount = recordAmountMap.computeIfAbsent(brandOrder, k -> BigDecimal.ZERO);
         totalAmount = totalAmount.add(new BigDecimal(record.getAmount()));
@@ -87,7 +82,6 @@ public class RecordLineHandler implements LineHandler {
         Result1 result = new Result1()
                 .setOrder(brandOrder)
                 .setAmount(totalAmount);
-
         queue.remove(result);
         queue.offer(result);
     }
