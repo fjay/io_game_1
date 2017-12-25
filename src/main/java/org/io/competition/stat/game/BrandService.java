@@ -10,6 +10,7 @@ import org.io.competition.stat.util.Util;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author Jay Wu
  */
+@Service
 public class BrandService {
 
     private static final Log log = LogFactory.get();

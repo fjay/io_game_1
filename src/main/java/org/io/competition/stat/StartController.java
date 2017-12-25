@@ -22,7 +22,8 @@ import java.util.Map;
 @RestController
 public class StartController implements InitializingBean {
 
-    private BrandService brandService = new BrandService();
+    @Autowired
+    private BrandService brandService;
 
     @Autowired
     private AppConfig appConfig;

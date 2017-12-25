@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 public class StatApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(StatApplication.class, args);
+        SpringApplication springApplication = new SpringApplication(StatApplication.class);
+        springApplication.addListeners(new ApplicationStartup());
+        springApplication.run(args);
     }
 }
