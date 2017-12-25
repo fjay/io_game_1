@@ -2,9 +2,9 @@ package org.io.competition.stat.game.one;
 
 import com.xiaoleilu.hutool.io.LineHandler;
 import org.io.competition.stat.game.BrandService;
+import org.io.competition.stat.util.AmountCounter;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RecordLineHandler implements LineHandler {
 
     protected AtomicLong counter;
-    protected Map<Integer, BigDecimal> recordAmountMap = new HashMap<>();
+    protected AmountCounter amountCounter = new AmountCounter();
 
     protected BrandService brandService;
 
@@ -60,14 +60,11 @@ public class RecordLineHandler implements LineHandler {
             return;
         }
 
-        BigDecimal amount = new BigDecimal(Integer.valueOf(temp[temp.length - 2]));
-
-        BigDecimal totalAmount = recordAmountMap.computeIfAbsent(brandOrder, k -> BigDecimal.ZERO);
-        totalAmount = totalAmount.add(amount);
-        recordAmountMap.put(brandOrder, totalAmount);
+        amountCounter.addAmount(brandOrder, Integer.valueOf(temp[temp.length - 2]));
     }
 
+
     public Map<Integer, BigDecimal> getRecordAmountMap() {
-        return recordAmountMap;
+        return amountCounter.getRecordAmountMap();
     }
 }

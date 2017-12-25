@@ -16,7 +16,7 @@ public class RecordSortTask implements Callable<BoundedPriorityQueue<Result2>> {
     }
 
     @Override
-    public BoundedPriorityQueue<Result2> call() throws Exception {
+    public BoundedPriorityQueue<Result2> call() {
         return this.recordService.sort(this.recordFile.getAbsolutePath());
     }
 }
