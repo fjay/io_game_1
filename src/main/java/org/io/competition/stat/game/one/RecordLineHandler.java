@@ -27,8 +27,8 @@ public class RecordLineHandler implements LineHandler {
     public static void main(String[] args) {
         String line = "bjjXzeYDNeMDOOWJ PrOiCyVxjMfxlrygDg VIP_HZ 374291948 2015-2-2";
         ArrayList<Integer> temp = new ArrayList<>(10);
-        for(int j = 0 ; j < line.length() ; j++){
-            if(line.charAt(j) == ' '){
+        for (int j = 0; j < line.length(); j++) {
+            if (line.charAt(j) == ' ') {
                 temp.add(j);
             }
         }
@@ -45,8 +45,8 @@ public class RecordLineHandler implements LineHandler {
     public void handle(String line) {
         counter.incrementAndGet();
         ArrayList<Integer> temp = new ArrayList<>(10);
-        for(int j = 0 ; j < line.length() ; j++){
-            if(line.charAt(j) == ' '){
+        for (int j = 0; j < line.length(); j++) {
+            if (line.charAt(j) == ' ') {
                 temp.add(j);
             }
         }
