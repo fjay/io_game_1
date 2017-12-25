@@ -40,16 +40,16 @@ public class TaskServiceTest {
     @Test
     public void run2() throws Exception {
         run(new Task2Service(new AppConfig()
-                .setSplitFileCount(15)
-                .setWriterBufferLength(4000)
+                .setSplitFileCount(16)
+                .setWriterBufferLength(2048)
                 , brandService));
     }
 
     @Test
     public void run3() throws Exception {
         run(new Task3NewService(new AppConfig()
-                .setSplitFileCount(15)
-                .setWriterBufferLength(2000)
+                .setSplitFileCount(16)
+                .setWriterBufferLength(2048)
                 , brandService));
     }
 
