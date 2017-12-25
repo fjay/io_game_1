@@ -5,6 +5,9 @@ import com.xiaoleilu.hutool.io.IoUtil;
 import com.xiaoleilu.hutool.io.LineHandler;
 import com.xiaoleilu.hutool.log.Log;
 import com.xiaoleilu.hutool.log.LogFactory;
+import it.unimi.dsi.bits.TransformationStrategies;
+import it.unimi.dsi.fastutil.io.BinIO;
+import it.unimi.dsi.sux4j.mph.GOV4Function;
 import org.io.competition.stat.util.Stopwatch;
 import org.io.competition.stat.util.Util;
 import org.iq80.leveldb.DB;
@@ -13,9 +16,6 @@ import org.iq80.leveldb.impl.Iq80DBFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -26,83 +26,24 @@ public class BrandService {
 
     private static final Log log = LogFactory.get();
 
-    private Map<Integer, Integer> nameOrderLevel1Cache = new HashMap<>();
-    private Map<String, Integer> nameOrderLevel2Cache = new HashMap<>();
+    private GOV4Function<CharSequence> nameOrderCache;
     private DB orderNameCache;
 
-    private int size;
-
-    public void load(String path) throws IOException {
+    public void load(String path) throws Exception {
         log.info("Loading {}", path);
-        Stopwatch stopwatch = Stopwatch.create().start();
-
         File file = FileUtil.file(path);
-        String basePath = file.getParentFile().getAbsolutePath();
 
-        FileUtil.mkdir(basePath);
-        File orderNameCacheFile = new File(basePath + "/o");
-        boolean isCacheFileExists = orderNameCacheFile.exists();
-
-        if (orderNameCache == null) {
-            Options options = new Options();
-            options.createIfMissing(true);
-
-            orderNameCache = Iq80DBFactory.factory.open(orderNameCacheFile, options);
-        }
-
-        AtomicInteger counter = new AtomicInteger(0);
-        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
-            int order = counter.incrementAndGet();
-            int level1Key = line.hashCode();
-
-            if (nameOrderLevel1Cache.put(level1Key, order) != null) {
-                nameOrderLevel1Cache.put(level1Key, -1);
-                nameOrderLevel2Cache.put(line, order);
-            }
-
-            if (!isCacheFileExists) {
-                orderNameCache.put(Util.intToByteArray(order), line.getBytes());
-            }
-
-            if (counter.get() % 1000000 == 0) {
-                log.info("Loading {}, size: {}", path, counter.get());
-            }
-        });
-
-        size = counter.get();
-        stopwatch.stop();
-        log.info("Loaded {}, total:{}, level1:{} duration:{}",
-                path, size, nameOrderLevel1Cache.size(), nameOrderLevel2Cache.size(), stopwatch.duration());
-
-        counter.set(0);
-        FileUtil.readUtf8Lines(file, (LineHandler) line -> {
-            if (counter.incrementAndGet() % 1000000 == 0) {
-                log.info("Loading level2 {}, counter: {}", path, counter.get());
-            }
-
-            Integer value = getOrder(line);
-
-            if (value == null) {
-                nameOrderLevel2Cache.put(line, counter.get());
-            }
-        });
-
-        stopwatch.stop();
-        log.info("Loaded {}, total:{}, level1:{}, level2:{}, duration:{}",
-                path, size, nameOrderLevel1Cache.size(), nameOrderLevel2Cache.size(), stopwatch.duration());
+        loadOrderNameCache(file);
+        loadNameOrderCache(file);
     }
 
     public Integer getOrder(String brand) {
-        Integer value = nameOrderLevel1Cache.get(brand.hashCode());
-        if (value == null) {
+        long order = nameOrderCache.getLong(brand);
+        if (order == -1) {
             return null;
         }
 
-        if (value == -1) {
-            value = nameOrderLevel2Cache.get(brand);
-        }
-
-        return value;
+        return Long.valueOf(order).intValue();
     }
 
     public String getName(Integer order) {
@@ -117,15 +58,72 @@ public class BrandService {
     }
 
     public void clear() {
-        nameOrderLevel2Cache.clear();
-        nameOrderLevel1Cache.clear();
     }
 
     public void close() {
         IoUtil.close(orderNameCache);
     }
 
-    public int getSize() {
-        return size;
+    public long getSize() {
+        return nameOrderCache.size64();
+    }
+
+    private void loadNameOrderCache(File brandFile) throws Exception {
+
+        String basePath = brandFile.getParentFile().getAbsolutePath();
+
+        FileUtil.mkdir(basePath);
+        File orderNameCacheFile = new File(basePath + "/o");
+        FileUtil.mkdir(basePath);
+
+        boolean isCacheFileExists = orderNameCacheFile.exists();
+
+        if (orderNameCache == null) {
+            Options options = new Options();
+            options.createIfMissing(true);
+
+            orderNameCache = Iq80DBFactory.factory.open(orderNameCacheFile, options);
+        }
+
+        Stopwatch stopwatch = Stopwatch.create().start();
+
+        if (!isCacheFileExists) {
+            AtomicInteger counter = new AtomicInteger(0);
+
+            FileUtil.readUtf8Lines(brandFile, (LineHandler) line -> {
+                orderNameCache.put(Util.intToByteArray(counter.getAndIncrement()), line.getBytes());
+
+                if (counter.get() % 1000000 == 0) {
+                    log.info("Loading {}, size: {}", brandFile.getAbsolutePath(), counter.get());
+                }
+            });
+        }
+
+        stopwatch.stop();
+
+        log.info("loadNameOrderCache {}, total:{}, duration:{}",
+                brandFile.getAbsolutePath(), getSize(), stopwatch.duration());
+    }
+
+    private void loadOrderNameCache(File brandFile) throws Exception {
+        File cacheFile = new File(brandFile.getAbsolutePath() + ".order");
+        boolean isCacheFileExists = cacheFile.exists();
+        Stopwatch stopwatch = Stopwatch.create().start();
+
+        if (!isCacheFileExists) {
+            nameOrderCache = new GOV4Function.Builder<CharSequence>()
+                    .keys(FileUtil.readUtf8Lines(brandFile))
+                    .transform(TransformationStrategies.utf16())
+                    .signed(32)
+                    .build();
+            BinIO.storeObject(nameOrderCache, cacheFile);
+        } else {
+            //noinspection unchecked
+            nameOrderCache = (GOV4Function<CharSequence>) BinIO.loadObject(cacheFile);
+        }
+
+        stopwatch.stop();
+        log.info("loadOrderNameCache {}, total:{}, duration:{}",
+                brandFile.getAbsolutePath(), getSize(), stopwatch.duration());
     }
 }

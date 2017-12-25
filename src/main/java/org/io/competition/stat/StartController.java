@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,7 @@ public class StartController implements InitializingBean {
     private Map<Integer, TaskService> taskServiceMap = new HashMap<>();
 
     @RequestMapping(value = "/loadBrand")
-    public void loadBrand() throws IOException {
+    public void loadBrand() throws Exception {
         brandService.load(appConfig.getBrandPath());
     }
 
