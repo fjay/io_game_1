@@ -21,7 +21,7 @@ public class Task2Service implements TaskService {
 
     private final Log log = LogFactory.get();
 
-    private ExecutorService es = Executors.newFixedThreadPool(2);
+   // private ExecutorService es = Executors.newFixedThreadPool(2);
     private BrandService brandService;
     protected Record2Service recordService;
 
@@ -42,23 +42,27 @@ public class Task2Service implements TaskService {
         BoundedPriorityQueue<Result2> resultQueue = recordService.newQueue();
 
         // 尝试并行处理
-        List<Future<BoundedPriorityQueue<Result2>>> list = new ArrayList<>();
+        //List<Future<BoundedPriorityQueue<Result2>>> list = new ArrayList<>();
         for (File recordFile : files) {
-            Future<BoundedPriorityQueue<Result2>> future = this.es.submit(new RecordSortTask(recordService, recordFile));
-            list.add(future);
-        }
-
-        for (Future<BoundedPriorityQueue<Result2>> f : list) {
-            BoundedPriorityQueue<Result2> tempQueue = null;
-            try {
-                tempQueue = f.get();
-                for (Result2 result2 : tempQueue.toList()) {
-                    resultQueue.offer(result2);
-                }
-            } catch (Exception e) {
-                log.error(e, e.getMessage());
+//            Future<BoundedPriorityQueue<Result2>> future = this.es.submit(new RecordSortTask(recordService, recordFile));
+//            list.add(future);
+            BoundedPriorityQueue<Result2> tempQueue = new RecordSortTask(recordService, recordFile).call();
+            for (Result2 result2 : tempQueue.toList()) {
+                resultQueue.offer(result2);
             }
         }
+
+//        for (Future<BoundedPriorityQueue<Result2>> f : list) {
+//            BoundedPriorityQueue<Result2> tempQueue = null;
+//            try {
+//                tempQueue = f.get();
+//                for (Result2 result2 : tempQueue.toList()) {
+//                    resultQueue.offer(result2);
+//                }
+//            } catch (Exception e) {
+//                log.error(e, e.getMessage());
+//            }
+//        }
 
 
         ArrayList<Result2> result2s = resultQueue.toList();

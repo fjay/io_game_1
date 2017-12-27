@@ -69,33 +69,7 @@ public class Record2Service {
         String basePath = file.getParentFile().getAbsolutePath() + "/r";
         log.info("Loading {}", path);
 
-        List<File> files = Util.split(path, basePath, writerBufferLength, fileSize,
-                parameters -> {
-                    String line = parameters[0];
-                    ArrayList<Integer> temp = new ArrayList<>(10);
-                    for(int j = 0 ; j < line.length() ; j++){
-                        if(line.charAt(j) == ' '){
-                            temp.add(j);
-                        }
-                    }
-
-                    Integer order = brandService.getOrder(line.substring(0, temp.get(temp.size() -4)));
-                    if (order == null) {
-                        return null;
-                    }
-
-                    String date = line.substring(temp.get(temp.size() - 1) + 1);
-                    Integer amount = Integer.valueOf(line.substring(temp.get(temp.size() - 2) + 1, temp.get(temp.size() -1)));
-
-                    String content = date +
-                            "," +
-                            order +
-                            "@" +
-                            amount +
-                            "\n";
-                    int index = order % fileSize;
-                    return new Pair<>(index, content);
-                });
+        List<File> files = Util.split(path, basePath, writerBufferLength, fileSize, brandService);
 
         brandService.clear();
 

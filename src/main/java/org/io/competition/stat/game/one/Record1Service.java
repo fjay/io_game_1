@@ -73,14 +73,18 @@ public class Record1Service {
                     System.arraycopy(arr, beginPos, rest, 0, rest.length);
                 }
                 beginPos = 0;
-                q.offer(lines);
-
+                q.put(lines);
             }
         } catch(Exception e){
 
         }
 
-        q.offer(new ArrayList<>());
+        try {
+            q.put(new ArrayList<>());
+            t.interrupt();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         t.close();
 
         for (Map.Entry<Integer, BigDecimal> entry : lineHandler.getRecordAmountMap().entrySet()) {
@@ -126,7 +130,7 @@ public class Record1Service {
         public void run() {
             try{
                 while(run){
-                    List<String> lists = q.poll(10, TimeUnit.SECONDS);
+                    List<String> lists = q.take();
                     for(String line : lists){
                         this.lineHandler.handle(line);
                     }
