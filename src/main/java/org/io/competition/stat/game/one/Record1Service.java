@@ -31,7 +31,6 @@ public class Record1Service {
         this.brandService = brandService;
     }
 
-    private Semaphore se = new Semaphore(1);
 
     private SynchronousQueue<List<String>> q = new SynchronousQueue<List<String>>();
 
@@ -43,11 +42,7 @@ public class Record1Service {
         BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> queue = newQueue();
 
         RecordLineHandler lineHandler = newRecordLineHandler(counter);
-        try {
-            se.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
 
         ProcessLineThread t = new ProcessLineThread(lineHandler, q);
         t.start();
