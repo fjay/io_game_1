@@ -1,6 +1,6 @@
 package org.io.competition.stat.game.one;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
@@ -8,13 +8,13 @@ import java.util.Objects;
  */
 public class Result1 {
     private Integer order = 0;
-    private BigDecimal amount = new BigDecimal(0);
+    private BigInteger amount = BigInteger.ZERO;
 
-    public BigDecimal getAmount() {
+    public BigInteger getAmount() {
         return amount;
     }
 
-    public Result1 setAmount(BigDecimal amount) {
+    public Result1 setAmount(BigInteger amount) {
         this.amount = amount;
         return this;
     }
@@ -43,7 +43,6 @@ public class Result1 {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(order);
     }
 }

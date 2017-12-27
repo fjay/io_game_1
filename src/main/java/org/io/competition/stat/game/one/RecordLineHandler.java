@@ -4,7 +4,7 @@ import com.xiaoleilu.hutool.io.LineHandler;
 import org.io.competition.stat.game.BrandService;
 import org.io.competition.stat.util.AmountCounter;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -86,7 +86,7 @@ public class RecordLineHandler implements LineHandler {
         amountCounter.addAmount(brandOrder, amount);
     }
 
-    public Map<Integer, BigDecimal> getRecordAmountMap() {
+    public Map<Integer, BigInteger> getRecordAmountMap() {
         return amountCounter.getRecordAmountMap();
     }
 }

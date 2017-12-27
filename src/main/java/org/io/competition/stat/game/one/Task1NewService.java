@@ -6,7 +6,7 @@ import com.xiaoleilu.hutool.log.LogFactory;
 import org.io.competition.stat.TaskService;
 import org.io.competition.stat.game.BrandService;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,13 +28,13 @@ public class Task1NewService implements TaskService {
 
     @Override
     public List<String> run(String recordPath) throws Exception {
-        BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> resultQueue = record1Service.sort(recordPath);
+        BoundedPriorityQueue<Map.Entry<Integer, BigInteger>> resultQueue = record1Service.sort(recordPath);
 
-        List<Map.Entry<Integer, BigDecimal>> results = resultQueue.toList();
+        List<Map.Entry<Integer, BigInteger>> results = resultQueue.toList();
         log.info(results.toString());
 
         List<String> brandNames = new ArrayList<>();
-        for (Map.Entry<Integer, BigDecimal> result1 : resultQueue) {
+        for (Map.Entry<Integer, BigInteger> result1 : resultQueue) {
             brandNames.add(brandService.getName(result1.getKey()));
         }
         return brandNames;

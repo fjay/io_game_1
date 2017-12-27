@@ -7,7 +7,7 @@ import com.xiaoleilu.hutool.log.LogFactory;
 import org.io.competition.stat.game.BrandService;
 import org.io.competition.stat.util.Stopwatch;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -23,17 +23,17 @@ public class Record1Service {
         this.brandService = brandService;
     }
 
-    public BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> sort(String path) {
+    public BoundedPriorityQueue<Map.Entry<Integer, BigInteger>> sort(String path) {
         log.info("Loading {}", path);
 
         Stopwatch stopwatch = Stopwatch.create().start();
         AtomicLong counter = new AtomicLong();
-        BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> queue = newQueue();
+        BoundedPriorityQueue<Map.Entry<Integer, BigInteger>> queue = newQueue();
 
         RecordLineHandler lineHandler = newRecordLineHandler(counter);
         FileUtil.readUtf8Lines(FileUtil.file(path), lineHandler);
 
-        for (Map.Entry<Integer, BigDecimal> entry : lineHandler.getRecordAmountMap().entrySet()) {
+        for (Map.Entry<Integer, BigInteger> entry : lineHandler.getRecordAmountMap().entrySet()) {
             queue.offer(entry);
         }
 
@@ -46,7 +46,7 @@ public class Record1Service {
         return new RecordLineHandler(brandService, counter);
     }
 
-    public BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> newQueue() {
+    public BoundedPriorityQueue<Map.Entry<Integer, BigInteger>> newQueue() {
         return new BoundedPriorityQueue<>(
                 40,
                 (o1, o2) -> {

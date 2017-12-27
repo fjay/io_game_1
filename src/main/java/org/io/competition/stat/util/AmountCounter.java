@@ -1,6 +1,6 @@
 package org.io.competition.stat.util;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -10,29 +10,29 @@ import java.util.function.Function;
  */
 public class AmountCounter {
 
-    private Map<Integer, BigDecimal> recordAmountMap = new HashMap<>();
+    private Map<Integer, BigInteger> recordAmountMap = new HashMap<>();
     private DefaultAmountValue defaultAmountValue = new DefaultAmountValue();
 
-    public BigDecimal getAmount(Integer brandOrder) {
+    public BigInteger getAmount(Integer brandOrder) {
         return recordAmountMap.get(brandOrder);
     }
 
-    public BigDecimal addAmount(Integer brandOrder, Integer amount) {
-        BigDecimal totalAmount = recordAmountMap.computeIfAbsent(brandOrder, defaultAmountValue);
-        totalAmount = totalAmount.add(new BigDecimal(amount));
+    public BigInteger addAmount(Integer brandOrder, Integer amount) {
+        BigInteger totalAmount = recordAmountMap.computeIfAbsent(brandOrder, defaultAmountValue);
+        totalAmount = totalAmount.add(BigInteger.valueOf(amount));
         recordAmountMap.put(brandOrder, totalAmount);
         return totalAmount;
     }
 
-    public Map<Integer, BigDecimal> getRecordAmountMap() {
+    public Map<Integer, BigInteger> getRecordAmountMap() {
         return recordAmountMap;
     }
 
-    private class DefaultAmountValue implements Function<Integer, BigDecimal> {
+    private class DefaultAmountValue implements Function<Integer, BigInteger> {
 
         @Override
-        public BigDecimal apply(Integer integer) {
-            return BigDecimal.ZERO;
+        public BigInteger apply(Integer integer) {
+            return BigInteger.ZERO;
         }
     }
 }
