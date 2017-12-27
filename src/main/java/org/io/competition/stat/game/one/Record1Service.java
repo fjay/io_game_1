@@ -7,8 +7,16 @@ import com.xiaoleilu.hutool.log.LogFactory;
 import org.io.competition.stat.game.BrandService;
 import org.io.competition.stat.util.Stopwatch;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -23,6 +31,10 @@ public class Record1Service {
         this.brandService = brandService;
     }
 
+    private Semaphore se = new Semaphore(1);
+
+    private SynchronousQueue<List<String>> q = new SynchronousQueue<List<String>>();
+
     public BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> sort(String path) {
         log.info("Loading {}", path);
 
@@ -31,7 +43,50 @@ public class Record1Service {
         BoundedPriorityQueue<Map.Entry<Integer, BigDecimal>> queue = newQueue();
 
         RecordLineHandler lineHandler = newRecordLineHandler(counter);
-        FileUtil.readUtf8Lines(FileUtil.file(path), lineHandler);
+        try {
+            se.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ProcessLineThread t = new ProcessLineThread(lineHandler, q);
+        t.start();
+        //FileUtil.readUtf8Lines(FileUtil.file(path), lineHandler);
+        try{
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(path));
+            byte[] rest = null;
+            byte[] arr = new byte[10 * 1024 * 1024];
+            int len = 0;
+            int beginPos = 0;
+            while((len = bis.read(arr)) != -1){
+                List<String> lines = new ArrayList<>();
+                for(int i= 0 ; i < len; i++){
+                    if (arr[i] == '\n'){
+                        if(rest != null){
+                            lines.add(new String(rest) + new String(arr,beginPos,i - beginPos));
+                            rest = null;
+                        } else {
+                            lines.add(new String(arr,beginPos,i - beginPos));
+                        }
+
+                        beginPos = i + 1;
+                    }
+                }
+                if(beginPos < arr.length){
+                    //有剩余
+                    rest = new byte[len - beginPos];
+                    System.arraycopy(arr, beginPos, rest, 0, rest.length);
+                }
+                beginPos = 0;
+                q.offer(lines);
+
+            }
+        } catch(Exception e){
+
+        }
+
+        q.offer(new ArrayList<>());
+        t.close();
 
         for (Map.Entry<Integer, BigDecimal> entry : lineHandler.getRecordAmountMap().entrySet()) {
             queue.offer(entry);
@@ -59,5 +114,36 @@ public class Record1Service {
                     return result;
                 }
         );
+    }
+
+    private class ProcessLineThread extends Thread{
+
+        private RecordLineHandler lineHandler;
+        private SynchronousQueue<List<String>> q;
+        private boolean run = true;
+
+        public ProcessLineThread(RecordLineHandler lineHandler, SynchronousQueue<List<String>> q) {
+            this.lineHandler = lineHandler;
+            this.q = q;
+        }
+
+        @Override
+        public void run() {
+            try{
+                while(run){
+                    List<String> lists = q.poll(10, TimeUnit.SECONDS);
+                    for(String line : lists){
+                        this.lineHandler.handle(line);
+                    }
+                }
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+
+        }
+
+        public void close(){
+            this.run =false;
+        }
     }
 }
